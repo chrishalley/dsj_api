@@ -7,10 +7,32 @@ var UserSchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true
+  },
   password: {
     type: String,
     required: true,
     minLength: 6
+  },
+  dateApplied: {
+    type: Number,
+    required: true
+  },
+  dateApproved: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    required: true
   }
 });
 
