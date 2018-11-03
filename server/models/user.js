@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
   email: {
@@ -20,21 +21,44 @@ var UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minLength: 6
+    minLength: 6,
+    default: 'password'
   },
   dateApplied: {
     type: Number,
-    required: true
+    required: true,
+    default: new Date().getTime()
   },
   dateApproved: {
     type: Number,
-    required: true
+    required: false
   },
   status: {
     type: String,
     required: true
   }
 });
+
+UserSchema.statics.findByCredentials = function(email, password) {
+  var User = this;
+  return User.findOne({email})
+    .then(user => {
+      if (!user) {
+        return Promise.reject();
+      }
+      return new Promise((resolve, reject) => {
+        if (user.password === password) {
+          resolve(user);
+        } else {
+          reject('Password does not match');
+        }
+      });
+    })
+    .catch(e => {
+      console.log(e)
+      return Promise.reject();
+    });
+};
 
 var User = mongoose.model('User', UserSchema);
 

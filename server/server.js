@@ -49,3 +49,38 @@ app.post('/users', (req, res) => {
       });
     });
 });
+
+app.post('/users/register', (req, res) => {
+  console.log(req.body)
+  var user = new User({
+    email: req.body.email,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    status: 'pending'
+  });
+  user.save()
+    .then(doc => {
+      res.status(200).send(doc);
+    })
+    .catch(e => {
+      console.log(e);
+      const message = errorMessage(e);
+      res.status(400).send(e);
+    })
+});
+
+app.post('/users/login', (req, res) => {
+  var user = req.body;
+  User.findByCredentials(user.email, user.password)
+    .then(doc => {
+      res.status(200).send(doc);
+    })
+    .catch(e => {
+      console.log(e);
+      res.status(404).send(e);
+    });
+});
+
+module.exports = {
+  app
+};

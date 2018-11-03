@@ -14,6 +14,7 @@
   "author": "Chris Halley",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "cors": "^2.8.4",
     "express": "^4.16.4",
@@ -21,7 +22,9 @@
     "mongoose": "^5.3.8"
   },
   "devDependencies": {
+    "expect": "^23.6.0",
     "mocha": "^5.2.0",
-    "nodemon": "^1.18.5"
+    "nodemon": "^1.18.5",
+    "supertest": "^3.3.0"
   }
 }
