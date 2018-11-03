@@ -1,0 +1,10 @@
+{
+  "test" : {
+    "PORT": 3030,
+    "MONGOBD_URI": "mongodb://localhost:27017/DSJ_App_Test"
+  },
+  "development": {
+    "PORT": 3030,
+    "MONGODB_URI": "mongodb://localhost:27017/DSJ_App_Dev"
+  }
+}
