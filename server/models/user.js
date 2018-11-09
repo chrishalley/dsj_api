@@ -76,8 +76,36 @@ UserSchema.statics.findUserById = function(id) {
 };
 
 UserSchema.methods.setPassword = function(id, password) {
-  console.log('id: ', id);
-  console.log('password: ', password);
+  const user = this;
+  if (user) {
+    return new Promise((resolve, reject) => {
+      bcrypt.genSalt(14, (err, salt) => {
+        if (err) {
+          console.log(err);
+          reject(err);
+        }
+        bcrypt.hash(password, salt, (err, hash) => {
+          if (err) {
+            console.log(err);
+            reject(err);
+          }
+          console.log(hash);
+          resolve(hash);
+        })
+      })
+    })
+    .then((hash) => {
+      console.log(user);
+      return user.updateOne({
+        $set: {
+          password: hash
+        }
+      })
+    })
+    .catch(e => {
+      console.log(e);
+    })
+  }
   return new Promise((res, rej) => {
     res('set password route');
   })
