@@ -49,11 +49,17 @@ UserSchema.statics.findByCredentials = function(email, password) {
         throw new applicationError.UserNotFoundError();
       }
       return new Promise((resolve, reject) => {
-        if (user.password === password) {
-          resolve(user);
-        } else {
-          reject('Password does not match');
-        }
+        bcrypt.compare(password, user.password)
+          .then(res => {
+            if (res) {
+              resolve();
+            } else {
+              throw new applicationError.PasswordIncorrectError();
+            }
+          })
+          .catch(e => {
+            reject(new applicationError.PasswordIncorrectError());
+          });
       });
     })
     .catch(e => {
