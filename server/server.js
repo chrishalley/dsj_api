@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const {mongoose} = require('./db/mongoose');
 const {errorMessage} = require('./utils/errors');
+const applicationError = require('./errors/applicationErrors');
 
 const app = express();
 const port = process.env.PORT;
@@ -31,6 +32,24 @@ app.get('/events', (req, res) => {
 app.post('/events', (req, res) => {
   res.status(200).send(req.body);
 });
+
+// GET USER INFO
+
+app.get('/users/:id', (req, res) => {
+  User.findById(req.params.id)
+    .then(user => {
+      if (user === null) {
+        throw Error('error');
+      }
+      res.status(200).send(user);
+    })
+    .catch(e => {
+      console.log(e);
+      res.status(404).send('User not found');
+    })
+});
+
+// SAVE NEW USER
 
 app.post('/users', (req, res) => {
   var user = new User({
@@ -69,6 +88,8 @@ app.post('/users/register', (req, res) => {
     })
 });
 
+
+// USER LOGIN
 app.post('/users/login', (req, res) => {
   var user = req.body;
   User.findByCredentials(user.email, user.password)
@@ -76,10 +97,35 @@ app.post('/users/login', (req, res) => {
       res.status(200).send(doc);
     })
     .catch(e => {
-      console.log(e);
-      res.status(404).send(e);
+      res.status(e.status).send(e);
     });
 });
+
+// USER SET PASSWORD
+app.post('/users/:id/set-password', (req, res) => {
+  
+  const currentPassword = req.body.currentPassword;
+  const newPassword = req.body.newPassword;
+  User.findUserById(req.params.id)
+    .then((user) => {
+      if (user === null) {
+        throw new applicationError.UserNotFoundError();
+      }
+      if (currentPassword !== user.password) {
+        throw new applicationError.PasswordIncorrectError();
+      }
+      user.setPassword(user._id, newPassword)
+        .then(() => {
+          res.status(200).send('Password successfully set');
+        })
+        .catch(e => {
+          res.status(400).send(e);
+        });
+    })
+    .catch(e => {
+      res.status(e.status).send(e.message);
+    });
+})
 
 module.exports = {
   app

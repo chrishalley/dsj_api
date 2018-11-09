@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const applicationError = require('../errors/applicationErrors');
+
 var UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -44,7 +46,7 @@ UserSchema.statics.findByCredentials = function(email, password) {
   return User.findOne({email})
     .then(user => {
       if (!user) {
-        return Promise.reject();
+        throw new applicationError.UserNotFoundError();
       }
       return new Promise((resolve, reject) => {
         if (user.password === password) {
@@ -55,9 +57,30 @@ UserSchema.statics.findByCredentials = function(email, password) {
       });
     })
     .catch(e => {
-      console.log(e)
-      return Promise.reject();
+      return Promise.reject(e);
     });
+};
+
+UserSchema.statics.findUserById = function(id) {
+  var User = this;
+  return User.findById(id)
+    .then(user => {
+      if (!user) {
+        throw new applicationError.UserNotFoundError();
+      } 
+      return user;
+    })
+    .catch(e => {
+      throw new applicationError.InvalidUserID();
+    });
+};
+
+UserSchema.methods.setPassword = function(id, password) {
+  console.log('id: ', id);
+  console.log('password: ', password);
+  return new Promise((res, rej) => {
+    res('set password route');
+  })
 };
 
 var User = mongoose.model('User', UserSchema);
