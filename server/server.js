@@ -70,7 +70,6 @@ app.post('/users', (req, res) => {
 });
 
 app.post('/users/register', (req, res) => {
-  console.log(req.body)
   var user = new User({
     email: req.body.email,
     firstName: req.body.firstName,
@@ -103,27 +102,42 @@ app.post('/users/login', (req, res) => {
 
 // USER SET PASSWORD
 app.post('/users/:id/set-password', (req, res) => {
-  
+
   const currentPassword = req.body.currentPassword;
   const newPassword = req.body.newPassword;
+
   User.findUserById(req.params.id)
-    .then((user) => {
+    .then(user => {
       if (user === null) {
-        throw new applicationError.UserNotFoundError();
-      }
-      if (currentPassword !== user.password) {
-        throw new applicationError.PasswordIncorrectError();
-      }
-      user.setPassword(user._id, newPassword)
-        .then(() => {
-          res.status(200).send('Password successfully set');
-        })
-        .catch(e => {
-          res.status(400).send(e);
-        });
+        error = new applicationError.UserNotFoundError();
+        reject(error);
+      } 
+      return user;
+    })
+    .then(user => {
+      console.log(currentPassword);
+        return user.checkPassword(currentPassword)
+          .then((valid) => {
+            if (valid) {
+              return user;
+            }
+            throw new applicationError.PasswordIncorrectError();
+          })
+          .catch(e => {
+            throw e;
+          });
+    })
+    .then(user => {
+        return user.setPassword(newPassword)
+          .then((user) => {
+            res.status(200).send(user);
+          })
+          .catch(e => {
+            console.log('Error: ', e);
+          })
     })
     .catch(e => {
-      res.status(e.status).send(e.message);
+      res.status(e.status || 500).send(e.message);
     });
 })
 

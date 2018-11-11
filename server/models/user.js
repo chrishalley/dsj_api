@@ -52,7 +52,7 @@ UserSchema.statics.findByCredentials = function(email, password) {
         bcrypt.compare(password, user.password)
           .then(res => {
             if (res) {
-              resolve();
+              resolve(user);
             } else {
               throw new applicationError.PasswordIncorrectError();
             }
@@ -81,41 +81,70 @@ UserSchema.statics.findUserById = function(id) {
     });
 };
 
-UserSchema.methods.setPassword = function(id, password) {
+UserSchema.methods.setPassword = function(password) {
   const user = this;
   if (user) {
     return new Promise((resolve, reject) => {
       bcrypt.genSalt(14, (err, salt) => {
         if (err) {
-          console.log(err);
           reject(err);
         }
         bcrypt.hash(password, salt, (err, hash) => {
           if (err) {
-            console.log(err);
             reject(err);
           }
-          console.log(hash);
           resolve(hash);
-        })
-      })
+        });
+      });
     })
     .then((hash) => {
-      console.log(user);
-      return user.updateOne({
+      user.updateOne({
         $set: {
           password: hash
         }
-      })
+      });
+      return user;
     })
-    .catch(e => {
-      console.log(e);
+    .catch(e => {      
+      reject(e);
     })
+  } else {
+    throw new applicationError.UserNotFoundError();
   }
-  return new Promise((res, rej) => {
-    res('set password route');
-  })
 };
+
+UserSchema.methods.checkPassword = function(password) {
+  const user = this;
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(password, user.password, (err, res) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(res);
+    });
+  });
+};  
+
+UserSchema.pre('save', function (next) {
+  var user = this;
+
+  if (user.isModified('password')) {
+    bcrypt.genSalt(10, (err, salt) => {
+      if (err) {
+        return console.log(err);
+      }
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        if (err) {
+          return console.log(err);
+        }
+        user.password = hash;
+        next();
+      });
+    });
+  } else {
+    next();
+  }
+});
 
 var User = mongoose.model('User', UserSchema);
 

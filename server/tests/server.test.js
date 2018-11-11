@@ -26,7 +26,6 @@ describe('POST /users/login', () => {
 
   it('should return a 200 for an existing user', (done) => {
     var user = users[0];
-
     request(app)
       .post('/users/login')
       .send(user)
@@ -39,7 +38,7 @@ describe('POST /users/login', () => {
 });
 
 describe('POST /users/:id/set-password', () => {
-  it('should return an error for a request with wrong password', (done) => {
+  it('should return an error for a request with wrong current password', (done) => {
     var user = users[0];
     var url = '/users/' + user._id + '/set-password';
     
@@ -74,7 +73,7 @@ describe('POST /users/:id/set-password', () => {
       .end(done);
   });
 
-  it('should return a string for a valid request', (done) => {
+  it('should return user object for a valid request', (done) => {
     var user = users[0];
     var url = '/users/' + user._id + '/set-password';
 
@@ -86,7 +85,7 @@ describe('POST /users/:id/set-password', () => {
       })
       .expect(200)
       .expect(res => {
-        expect(typeof res).toBe('object');
+        expect(res.body.password).not.toBe(user.password);
       })
       .end(done);
   });
