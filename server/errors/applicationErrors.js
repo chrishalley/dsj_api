@@ -31,11 +31,18 @@ class InvalidUserID extends ApplicationError {
   }
 }
 
+class InvalidRequest extends ApplicationError {
+  constructor(message) {
+    super(message || 'Invalid request', 400);
+  }
+}
+
 module.exports = UserNotFoundError;
 
 module.exports = {
   ApplicationError,
   UserNotFoundError,
   PasswordIncorrectError,
-  InvalidUserID
+  InvalidUserID,
+  InvalidRequest
 };

@@ -81,6 +81,26 @@ UserSchema.statics.findUserById = function(id) {
     });
 };
 
+UserSchema.methods.setStatus = function(status) {
+  const user = this;
+  if(user) {
+    return new Promise((resolve, reject) => {
+      user.updateOne({
+        $set: {
+          status: status
+        }
+      })
+        .then((res) => {
+          resolve();
+        })
+        .catch(e => {
+          reject(e);
+        })
+    });
+  }
+  throw new applicationError.UserNotFoundError();
+};
+
 UserSchema.methods.setPassword = function(password) {
   const user = this;
   if (user) {

@@ -4,8 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const {mongoose} = require('./db/mongoose');
-const {errorMessage} = require('./utils/errors');
+const {errorMessage} = require('./utils/utils');
 const applicationError = require('./errors/applicationErrors');
+const utils = require('./utils/utils');
 
 const app = express();
 const port = process.env.PORT;
@@ -49,6 +50,18 @@ app.get('/users/:id', (req, res) => {
     })
 });
 
+// GET USERS LIST
+
+app.get('/users', (req, res) => {
+  User.find({})
+    .then(users => {
+      res.status(200).send(users);
+    })
+    .catch(e => {
+      console.log(e);
+    });
+})
+
 // SAVE NEW USER
 
 app.post('/users', (req, res) => {
@@ -68,6 +81,10 @@ app.post('/users', (req, res) => {
       });
     });
 });
+
+// DELETE NEW USER
+
+
 
 app.post('/users/register', (req, res) => {
   var user = new User({
@@ -100,6 +117,32 @@ app.post('/users/login', (req, res) => {
     });
 });
 
+// UPDATING USERS
+app.put('/users/:id', (req, res) => {
+  const id = req.params.id;
+  const update = req.body;
+  if (!update || utils.isEmptyObject(update)) {
+    const error = new applicationError.InvalidRequest();
+    return res.status(error.status).send(error);
+  } else {
+    User.findUserById(id)
+      .then((user) => {
+        user.updateOne({
+          $set: update
+        })
+        .then(() => {
+          res.status(200).send('User updated');
+        })
+        .catch(e => {
+          throw e;
+        })
+      })
+      .catch(e => {
+        res.status(500).send(e);
+      });
+  }
+});
+
 // USER SET PASSWORD
 app.post('/users/:id/set-password', (req, res) => {
 
@@ -115,7 +158,6 @@ app.post('/users/:id/set-password', (req, res) => {
       return user;
     })
     .then(user => {
-      console.log(currentPassword);
         return user.checkPassword(currentPassword)
           .then((valid) => {
             if (valid) {

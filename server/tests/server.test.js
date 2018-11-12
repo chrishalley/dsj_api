@@ -4,6 +4,7 @@ const request = require('supertest');
 const {app} = require('./../server');
 const {User} = require('./../models/user');
 const {populateUsers, users} = require('./seed/seed');
+const applicationError = require('../errors/applicationErrors');
 
 beforeEach(populateUsers);
 
@@ -89,4 +90,40 @@ describe('POST /users/:id/set-password', () => {
       })
       .end(done);
   });
+});
+
+describe('PUT /users/:id', () => {
+  it('should set a user\'s status to approved', (done) => {
+
+    var user = users[0];
+    var url = '/users/' + user._id;
+
+    request(app)
+      .put(url)
+      .send({
+        status: 'approved'
+      })
+      .expect(200)
+      .expect(res => {
+
+        expect(typeof res.body).toBe('object');
+      })
+      .end(done);
+  });
+
+  it('should return 400 error on empty object', (done) => {
+    var user = users[0];
+    var url = `/users/${user._id}`;
+    var error = new applicationError.InvalidRequest();
+    
+    request(app)
+    .put(url)
+    .send({})
+    .expect(400)
+    .expect(res => {
+      
+      expect(res.body.message).toEqual(error.message);
+      })
+      .end(done);
+  })
 });
