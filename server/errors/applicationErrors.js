@@ -37,6 +37,18 @@ class InvalidRequest extends ApplicationError {
   }
 }
 
+class GeneralError extends ApplicationError {
+  constructor(message) {
+    super(message || 'An error has occurred', 520);
+  }
+}
+
+class UserForbidden extends ApplicationError {
+  constructor(message) {
+    super(message || 'User unauthorised', 403);
+  }
+}
+
 module.exports = UserNotFoundError;
 
 module.exports = {
@@ -44,5 +56,7 @@ module.exports = {
   UserNotFoundError,
   PasswordIncorrectError,
   InvalidUserID,
-  InvalidRequest
+  InvalidRequest,
+  GeneralError,
+  UserForbidden
 };

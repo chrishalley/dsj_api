@@ -16,7 +16,7 @@ const users = [
     firstName: 'Dave',
     lastName: 'Daveson',
     email: 'dave@daveson.com',
-    status: 'pending',
+    status: 'approved',
     password: 'password'
   },
 ];

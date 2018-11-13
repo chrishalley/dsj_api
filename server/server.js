@@ -37,16 +37,23 @@ app.post('/events', (req, res) => {
 // GET USER INFO
 
 app.get('/users/:id', (req, res) => {
+  const validID = mongoose.Types.ObjectId.isValid(req.params.id);
+  
+  if (!validID) {
+    const error = new applicationError.InvalidUserID();
+    return res.status(error.status).send(error);
+  }
+
   User.findById(req.params.id)
     .then(user => {
       if (user === null) {
-        throw Error('error');
+        throw new applicationError.UserNotFoundError();
       }
       res.status(200).send(user);
     })
     .catch(e => {
-      console.log(e);
-      res.status(404).send('User not found');
+      // console.log(e);
+      res.status(e.status).send(e);
     })
 });
 
@@ -82,10 +89,31 @@ app.post('/users', (req, res) => {
     });
 });
 
-// DELETE NEW USER
+// DELETE USER
+app.delete('/users/:id', (req, res) => {
+  const id = req.params.id;
+  const validID = mongoose.Types.ObjectId.isValid(id);
+  
+  if (!validID) {
+    let error = new applicationError.InvalidUserID();
+    return res.status(error.status).send(error);
+  }
 
+  User.findByIdAndDelete(id)
+    .then(user => {
+      if (!user) {
+        error = new applicationError.UserNotFoundError();
+        return res.status(error.status).send(error);
+      }
+      res.status(200).send(doc);
+    })
+    .catch(e => {
+      error = new applicationError.GeneralError();
+      return res.status(error.status).send(error);
+    })
+});
 
-
+// Register User
 app.post('/users/register', (req, res) => {
   var user = new User({
     email: req.body.email,
@@ -107,10 +135,25 @@ app.post('/users/register', (req, res) => {
 
 // USER LOGIN
 app.post('/users/login', (req, res) => {
-  var user = req.body;
-  User.findByCredentials(user.email, user.password)
-    .then(doc => {
-      res.status(200).send(doc);
+  var credentials = req.body;
+  User.findByEmail(credentials.email)
+    .then(user => {
+      if (user.status !== 'approved') {
+        throw new applicationError.UserForbidden();
+      }
+      return user.checkPassword(credentials.password)
+        .then((valid) => {
+          if (!valid) {
+            throw new applicationError.PasswordIncorrectError();
+          }
+          return user;
+        })
+        .catch((e) => {
+          throw e;
+        })
+    })
+    .then((user) => {
+      res.status(200).send(user);
     })
     .catch(e => {
       res.status(e.status).send(e);
@@ -154,7 +197,7 @@ app.post('/users/:id/set-password', (req, res) => {
       if (user === null) {
         error = new applicationError.UserNotFoundError();
         reject(error);
-      } 
+      }
       return user;
     })
     .then(user => {
@@ -175,13 +218,13 @@ app.post('/users/:id/set-password', (req, res) => {
             res.status(200).send(user);
           })
           .catch(e => {
-            console.log('Error: ', e);
+            throw new applicationError.GeneralError();
           })
     })
     .catch(e => {
       res.status(e.status || 500).send(e.message);
     });
-})
+});
 
 module.exports = {
   app

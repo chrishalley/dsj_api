@@ -38,29 +38,20 @@ var UserSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true
+  },
+  tokens: {
+    type: Object
   }
 });
 
-UserSchema.statics.findByCredentials = function(email, password) {
+UserSchema.statics.findByEmail = function(email) {
   var User = this;
   return User.findOne({email})
     .then(user => {
       if (!user) {
         throw new applicationError.UserNotFoundError();
       }
-      return new Promise((resolve, reject) => {
-        bcrypt.compare(password, user.password)
-          .then(res => {
-            if (res) {
-              resolve(user);
-            } else {
-              throw new applicationError.PasswordIncorrectError();
-            }
-          })
-          .catch(e => {
-            reject(new applicationError.PasswordIncorrectError());
-          });
-      });
+      return user;
     })
     .catch(e => {
       return Promise.reject(e);
@@ -136,9 +127,9 @@ UserSchema.methods.setPassword = function(password) {
 UserSchema.methods.checkPassword = function(password) {
   const user = this;
   return new Promise((resolve, reject) => {
-    bcrypt.compare(password, user.password, (err, res) => {
+    return bcrypt.compare(password, user.password, (err, res) => {
       if (err) {
-        reject(err);
+       reject(new applicationError.PasswordIncorrectError);
       }
       resolve(res);
     });
