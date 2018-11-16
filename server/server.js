@@ -142,15 +142,6 @@ app.post('/users/login', (req, res) => {
         throw new applicationError.UserForbidden();
       }
       return user.checkPassword(credentials.password)
-        .then((valid) => {
-          if (!valid) {
-            throw new applicationError.PasswordIncorrectError();
-          }
-          return user;
-        })
-        .catch((e) => {
-          throw e;
-        })
     })
     .then((user) => {
       res.status(200).send(user);

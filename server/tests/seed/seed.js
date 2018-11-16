@@ -29,8 +29,20 @@ const populateUsers = (done) => {
 
     return Promise.all([userOne, userTwo]);
   })
+  .then(users => {
+    // console.log('users', users);
+    return users[0].generateAuthToken()
+      .then(token => {
+        return token;
+      })
+      .catch(e => {
+        console.log(e)
+      })
+  })
     .then(() => done())
-    .catch(e => console.log(e));
+    .catch(e => {
+      console.log(e)
+    });
 }
 
 module.exports = {

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const applicationError = require('../errors/applicationErrors');
 
@@ -40,7 +41,7 @@ var UserSchema = new mongoose.Schema({
     required: true
   },
   tokens: {
-    type: Object
+    type: Array
   }
 });
 
@@ -129,12 +130,77 @@ UserSchema.methods.checkPassword = function(password) {
   return new Promise((resolve, reject) => {
     return bcrypt.compare(password, user.password, (err, res) => {
       if (err) {
-       reject(new applicationError.PasswordIncorrectError);
+       reject(new applicationError.GeneralError());
       }
-      resolve(res);
+      if (res) {
+        resolve(user);
+      }
+      reject(new applicationError.PasswordIncorrectError());
     });
   });
-};  
+};
+
+UserSchema.methods.generateAuthToken = function() {
+  const user = this;
+  const access = 'auth';
+  const payload = {
+    id: user._id.toHexString(),
+    access: access
+  };
+  const token = jwt.sign(payload, process.env.JWT_SECRET).toString();
+
+  user.tokens = user.tokens.concat([{access, token}]);
+  return new Promise((resolve, reject) => {
+    user.save()
+      .then((res) => {
+        resolve(token);
+      })
+      .catch(e => {
+        reject(new applicationError.GeneralError('user.generateAuthToken() failed'));
+      });
+  });
+};
+
+UserSchema.methods.clearToken = function(token) {
+  const user = this;
+  return new Promise((resolve, reject) => {
+    User.findOneAndUpdate({
+      _id: user.id,
+      tokens: {
+        $elemMatch: {
+          token: token
+        }
+      }
+    },
+    { $pull: { tokens: { token: token } } }
+    )
+    .then(() => {
+      resolve(user);
+    })
+    .catch(() => {
+      reject(new applicationError.GeneralError('clearToken() failed'));
+    });
+  });
+};
+
+UserSchema.statics.findUserByToken = function(token) {
+  const user = this;
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch(e) {
+    return Promise.reject();
+  }
+  if (decoded.id) {
+    return User.findById(decoded.id)
+      .then(user => {
+        return user;
+      })
+      .catch(e => {
+        throw new applicationError.UserNotFoundError();
+      });
+  }
+};
 
 UserSchema.pre('save', function (next) {
   var user = this;

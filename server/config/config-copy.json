@@ -1,10 +1,12 @@
 {
   "test" : {
     "PORT": 3030,
-    "MONGOBD_URI": "mongodb://localhost:27017/DSJ_App_Test"
+    "MONGOBD_URI": "mongodb://localhost:27017/DSJ_App_Test",
+    "JWT_SECRET": "insert_random_char_string_here"
   },
   "development": {
     "PORT": 3030,
-    "MONGODB_URI": "mongodb://localhost:27017/DSJ_App_Dev"
+    "MONGODB_URI": "mongodb://localhost:27017/DSJ_App_Dev",
+    "JWT_SECRET": "insert_random_char_string_here"
   }
 }
