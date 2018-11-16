@@ -76,19 +76,30 @@ UserSchema.statics.findUserById = function(id) {
 UserSchema.methods.setStatus = function(status) {
   const user = this;
   if(user) {
-    return new Promise((resolve, reject) => {
-      user.updateOne({
-        $set: {
-          status: status
-        }
-      })
-        .then((res) => {
-          resolve();
-        })
-        .catch(e => {
-          reject(e);
-        })
+    return user.updateOne({
+      $set: {
+        status: status
+      }
+    })
+    .then(res => {
+      return true;
+    })
+    .catch(e => {
+      throw e;
     });
+    // return new Promise((resolve, reject) => {
+    //   user.updateOne({
+    //     $set: {
+    //       status: status
+    //     }
+    //   })
+    //     .then((res) => {
+    //       resolve();
+    //     })
+    //     .catch(e => {
+    //       reject(e);
+    //     })
+    // });
   }
   throw new applicationError.UserNotFoundError();
 };
@@ -96,48 +107,35 @@ UserSchema.methods.setStatus = function(status) {
 UserSchema.methods.setPassword = function(password) {
   const user = this;
   if (user) {
-    return new Promise((resolve, reject) => {
-      bcrypt.genSalt(14, (err, salt) => {
-        if (err) {
-          reject(err);
-        }
-        bcrypt.hash(password, salt, (err, hash) => {
-          if (err) {
-            reject(err);
+    return bcrypt.hash(password, 14)
+      .then(hash => {
+        return user.updateOne({
+          $set: {
+            password: hash
           }
-          resolve(hash);
-        });
+        })
+      })
+      .then(user => user)
+      .catch(e => {
+        throw e;
       });
-    })
-    .then((hash) => {
-      user.updateOne({
-        $set: {
-          password: hash
-        }
-      });
-      return user;
-    })
-    .catch(e => {      
-      reject(e);
-    })
   } else {
-    throw new applicationError.UserNotFoundError();
+      throw new applicationError.UserNotFoundError();
   }
 };
 
 UserSchema.methods.checkPassword = function(password) {
   const user = this;
-  return new Promise((resolve, reject) => {
-    return bcrypt.compare(password, user.password, (err, res) => {
-      if (err) {
-       reject(new applicationError.GeneralError());
+  return bcrypt.compare(password, user.password)
+    .then(res => {
+      if (!res) {
+        throw new applicationError.PasswordIncorrectError();
       }
-      if (res) {
-        resolve(user);
-      }
-      reject(new applicationError.PasswordIncorrectError());
+      return user;
+    })
+    .catch(e => {
+      throw e;
     });
-  });
 };
 
 UserSchema.methods.generateAuthToken = function() {
@@ -150,36 +148,33 @@ UserSchema.methods.generateAuthToken = function() {
   const token = jwt.sign(payload, process.env.JWT_SECRET).toString();
 
   user.tokens = user.tokens.concat([{access, token}]);
-  return new Promise((resolve, reject) => {
-    user.save()
-      .then((res) => {
-        resolve(token);
-      })
-      .catch(e => {
-        reject(new applicationError.GeneralError('user.generateAuthToken() failed'));
-      });
-  });
+  return user.save()
+    .then(res => {
+      return token;
+    })
+    .catch(e => {
+      reject(new applicationError.GeneralError('user.generateAuthToken() failed'));
+    });
 };
 
 UserSchema.methods.clearToken = function(token) {
   const user = this;
-  return new Promise((resolve, reject) => {
-    User.findOneAndUpdate({
-      _id: user.id,
-      tokens: {
-        $elemMatch: {
-          token: token
-        }
+  return User.findOneAndUpdate({
+    _id: user.id,
+    tokens: {
+      $elemMatch: {
+        token: token
       }
-    },
-    { $pull: { tokens: { token: token } } }
-    )
-    .then(() => {
-      resolve(user);
-    })
-    .catch(() => {
-      reject(new applicationError.GeneralError('clearToken() failed'));
-    });
+    }
+  },
+  { 
+    $pull: { tokens: { token: token } } 
+  })
+  .then(() => {
+    return user
+  })
+  .catch(() => {
+    reject(new applicationError.GeneralError('clearToken() failed'));
   });
 };
 

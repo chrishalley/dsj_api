@@ -154,6 +154,7 @@ describe('GET /users', () => {
 });
 
 describe('POST /users/login', () => {
+  
   it('should return a 404 for a non-existing user', (done) => {
     const user = users[0];
 
@@ -236,6 +237,7 @@ describe('POST /users/:id/set-password', () => {
       .expect(400)
       .expect(res => {
         expect(typeof res).toBe('object');
+        expect(res.error.text).toEqual('Password incorrect');
       })
       .end(done);
   });

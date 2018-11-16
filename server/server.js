@@ -135,7 +135,7 @@ app.post('/users/register', (req, res) => {
 
 // USER LOGIN
 app.post('/users/login', (req, res) => {
-  var credentials = req.body;
+  const credentials = req.body;
   User.findByEmail(credentials.email)
     .then(user => {
       if (user.status !== 'approved') {
@@ -185,32 +185,32 @@ app.post('/users/:id/set-password', (req, res) => {
 
   User.findUserById(req.params.id)
     .then(user => {
-      if (user === null) {
+      if (!user) {
         error = new applicationError.UserNotFoundError();
-        reject(error);
+        throw error;
       }
       return user;
     })
     .then(user => {
-        return user.checkPassword(currentPassword)
-          .then((valid) => {
-            if (valid) {
-              return user;
-            }
-            throw new applicationError.PasswordIncorrectError();
-          })
-          .catch(e => {
-            throw e;
-          });
+      return user.checkPassword(currentPassword)
+        .then((valid) => {
+          if (valid) {
+            return user;
+          }
+          throw new applicationError.PasswordIncorrectError();
+        })
+        .catch(e => {
+          throw e;
+        });
     })
     .then(user => {
-        return user.setPassword(newPassword)
-          .then((user) => {
-            res.status(200).send(user);
-          })
-          .catch(e => {
-            throw new applicationError.GeneralError();
-          })
+      return user.setPassword(newPassword)
+        .then((user) => {
+          res.status(200).send(user);
+        })
+        .catch(e => {
+          throw new applicationError.GeneralError();
+        })
     })
     .catch(e => {
       res.status(e.status || 500).send(e.message);
