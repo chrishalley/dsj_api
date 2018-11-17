@@ -45,6 +45,12 @@ var UserSchema = new mongoose.Schema({
   }
 });
 
+UserSchema.methods.toJSON = function() {
+  var obj = this.toObject();
+  delete obj.password;
+  return obj;
+ }
+
 UserSchema.statics.findByEmail = function(email) {
   var User = this;
   return User.findOne({email})
