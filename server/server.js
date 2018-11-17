@@ -142,8 +142,13 @@ app.post('/users/login', (req, res) => {
         throw new applicationError.UserForbidden();
       }
       return user.checkPassword(credentials.password)
+      .then(() => user)
+      .catch(e => { throw e });
     })
-    .then((user) => {
+    .then(user => {
+      return user.generateAuthToken();
+    })
+    .then(user => {
       res.status(200).send(user);
     })
     .catch(e => {
@@ -186,8 +191,7 @@ app.post('/users/:id/set-password', (req, res) => {
   User.findUserById(req.params.id)
     .then(user => {
       if (!user) {
-        error = new applicationError.UserNotFoundError();
-        throw error;
+        throw new applicationError.UserNotFoundError();
       }
       return user;
     })

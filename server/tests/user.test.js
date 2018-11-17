@@ -22,9 +22,9 @@ describe('user.generateAuthToken', () => {
             console.log(e);
           })
       })
-      .then(token => {
-        expect(typeof token).toBe('string');
-        return jwt.verify(token, process.env.JWT_SECRET);
+      .then(user => {
+        expect(typeof user).toBe('object');
+        return jwt.verify(user.tokens[0].token, process.env.JWT_SECRET);
       })
       .then(decoded => {
         expect(decoded).toMatchObject({
@@ -34,7 +34,6 @@ describe('user.generateAuthToken', () => {
         done();
       })
       .catch(e => {
-        console.log(e)
         done(e);
       });
   });

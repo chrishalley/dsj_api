@@ -182,7 +182,9 @@ describe('POST /users/login', () => {
       })
       .expect(200)
       .expect(res => {
+        console.log('RES.BODY', res.body);
         expect(res.body._id).toEqual(user._id.toHexString());
+        expect(res.body.tokens.length).toBeGreaterThan(0);
       })
       .end(done);
   });

@@ -131,7 +131,7 @@ UserSchema.methods.checkPassword = function(password) {
       if (!res) {
         throw new applicationError.PasswordIncorrectError();
       }
-      return user;
+      return true;
     })
     .catch(e => {
       throw e;
@@ -143,14 +143,17 @@ UserSchema.methods.generateAuthToken = function() {
   const access = 'auth';
   const payload = {
     id: user._id.toHexString(),
-    access: access
+    access: access,
+    expiresAt: new Date().getTime() + (3600)
   };
   const token = jwt.sign(payload, process.env.JWT_SECRET).toString();
-
+  user.tokens = user.tokens.filter(cur => {
+    return cur.access !== access;
+  });
   user.tokens = user.tokens.concat([{access, token}]);
   return user.save()
     .then(res => {
-      return token;
+      return user;
     })
     .catch(e => {
       reject(new applicationError.GeneralError('user.generateAuthToken() failed'));
