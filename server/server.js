@@ -99,17 +99,20 @@ app.delete('/users/:id', (req, res) => {
     return res.status(error.status).send(error);
   }
 
-  User.findByIdAndDelete(id)
-    .then(user => {
-      if (!user) {
-        error = new applicationError.UserNotFoundError();
-        return res.status(error.status).send(error);
+  User.findOneAndDelete({_id: id})
+    .then((user, err) => {
+      if (err) {
+        throw new applicationError.GeneralError();
       }
-      res.status(200).send(doc);
+      if (!user) {
+        throw new applicationError.UserNotFoundError();
+      }
+      return res.status(200).send(user);
     })
     .catch(e => {
-      error = new applicationError.GeneralError();
-      return res.status(error.status).send(error);
+      console.log('Fallen into catch')
+      // error = new applicationError.GeneralError();
+      return res.status(e.status).send(e);
     })
 });
 

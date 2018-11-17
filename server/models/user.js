@@ -150,7 +150,7 @@ UserSchema.methods.generateAuthToken = function() {
   const payload = {
     id: user._id.toHexString(),
     access: access,
-    expiresAt: new Date().getTime() + (3600)
+    expiresAt: new Date().getTime() + (3600 * 1000)
   };
   const token = jwt.sign(payload, process.env.JWT_SECRET).toString();
   user.tokens = user.tokens.filter(cur => {
