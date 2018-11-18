@@ -5,9 +5,9 @@ const {User} = require('./../../models/user')
 const users = [
   {
     _id: new ObjectID(),
-    firstName: 'Chris',
-    lastName: 'Chrisson',
-    email: 'chris@chris.com',
+    firstName: 'Jack',
+    lastName: 'Jackson',
+    email: 'jack@jackson.com',
     status: 'pending',
     password: 'password'
   },

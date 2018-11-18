@@ -52,7 +52,7 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe.only('DELETE /users/:id', () => {
+describe('DELETE /users/:id', () => {
   it('should delete a user by id', (done) => {
     const user =  users[0];
     

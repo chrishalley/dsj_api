@@ -2,6 +2,7 @@ require('./config/config.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 
 const {mongoose} = require('./db/mongoose');
 const {errorMessage} = require('./utils/utils');
@@ -19,6 +20,32 @@ var corsOptions = {
 app.use(cors(corsOptions));
 
 const {User} = require('./models/user');
+
+// NODEMAILER CONFIG
+
+const account = {
+  user: 'qb45rpddnpyiub3l@ethereal.email',
+  pass: 'uQeGPhpt8HVAfmu83D'
+};
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.ethereal.email',
+  port: 587,
+  secure: false,
+  auth: {
+    user: account.user,
+    pass: account.pass
+  }
+})
+
+  // SETUP EMAIL DATA
+  let mailOptions = {
+    from: '"Fred Foo" <foo@example.com>',
+    to: 'bar@example.com',
+    subject: 'Hello from Nodemailer!',
+    text: 'Whoa, this freaking works!',
+    html: '<b>This is awesome</b>'
+  };
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
@@ -72,20 +99,30 @@ app.get('/users', (req, res) => {
 // SAVE NEW USER
 
 app.post('/users', (req, res) => {
-  var user = new User({
-    email: req.body.email,
-    password: req.body.password
+  const user = req.body;
+  console.log(user);
+  const newUser = new User({
+    email: user.email,
+    password: user.password,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    status: 'approved'
   });
 
-  user.save()
+  newUser.save()
     .then(doc => {
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          return console.log(error);
+        }
+        console.log('Message sent %s', info.messageId);
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      })
       res.status(200).send(doc);
     })
     .catch(e => {
-      const message = errorMessage(e);
-      res.status(400).send({
-        Error: message
-      });
+      console.log(e);
+      res.status(400).send(e);
     });
 });
 
