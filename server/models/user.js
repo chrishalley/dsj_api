@@ -39,7 +39,13 @@ var UserSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    required: true
+    required: true,
+    default: 'approved'
+  },
+  role: {
+    type: String,
+    required: true,
+    default: 'admin'
   },
   tokens: {
     type: Array

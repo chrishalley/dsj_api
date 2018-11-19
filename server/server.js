@@ -111,28 +111,46 @@ app.post('/users', (req, res) => {
 // DELETE USER
 app.delete('/users/:id', (req, res) => {
   const id = req.params.id;
-  const validID = mongoose.Types.ObjectId.isValid(id);
   
-  if (!validID) {
-    let error = new applicationError.InvalidUserID();
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const error = new applicationError.InvalidUserID();
     return res.status(error.status).send(error);
   }
 
-  User.findOneAndDelete({_id: id})
-    .then((user, err) => {
-      if (err) {
-        throw new applicationError.GeneralError();
-      }
+  // Check role of user
+  User.findOne({_id: id})
+    .then(user => {
       if (!user) {
         throw new applicationError.UserNotFoundError();
       }
-      return res.status(200).send(user);
+      if (user.role === 'super-admin') {
+        return User.find({role: 'super-admin'})
+          .then(users => {
+            if (users.length < 2) {
+              throw new applicationError.GeneralError('Cannot delete only remaining super-admin', 403);
+            } else {
+              return user
+            }
+          })
+          .catch(e => {
+            throw e
+          })   
+      } else {
+        return user
+      }
     })
+    .then(user => {
+      user.delete()
+        .then(user => {
+          res.status(200).send(user);
+        })
+        .catch(e => {
+          throw e;
+        })
+    }) 
     .catch(e => {
-      console.log('Fallen into catch')
-      // error = new applicationError.GeneralError();
       return res.status(e.status).send(e);
-    })
+    });
 });
 
 // Register User

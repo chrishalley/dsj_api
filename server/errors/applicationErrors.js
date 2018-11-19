@@ -14,38 +14,38 @@ class ApplicationError extends Error {
 }
 
 class UserNotFoundError extends ApplicationError {
-  constructor(message) {
-    super(message || 'No User found.', 404);
+  constructor(message, status) {
+    super(message || 'No User found.', status || 404);
   }
 }
 
 class PasswordIncorrectError extends ApplicationError {
-  constructor(message) {
-    super(message || 'Password incorrect', 400);
+  constructor(message, status) {
+    super(message || 'Password incorrect', status || 400);
   }
 }
 
 class InvalidUserID extends ApplicationError {
-  constructor(message) {
-    super(message || 'Invalid user ID', 400);
+  constructor(message, status) {
+    super(message || 'Invalid user ID', status || 400);
   }
 }
 
 class InvalidRequest extends ApplicationError {
-  constructor(message) {
-    super(message || 'Invalid request', 400);
+  constructor(message, status) {
+    super(message || 'Invalid request', status || 400);
   }
 }
 
 class GeneralError extends ApplicationError {
-  constructor(message) {
-    super(message || 'An error has occurred', 520);
+  constructor(message, status) {
+    super(message || 'An error has occurred', status || 520);
   }
 }
 
 class UserForbidden extends ApplicationError {
-  constructor(message) {
-    super(message || 'User unauthorised', 403);
+  constructor(message, status) {
+    super(message || 'User unauthorised', status || 403);
   }
 }
 

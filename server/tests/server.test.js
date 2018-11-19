@@ -52,7 +52,7 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe('DELETE /users/:id', () => {
+describe.only('DELETE /users/:id', () => {
   it('should delete a user by id', (done) => {
     const user =  users[0];
     
@@ -63,16 +63,15 @@ describe('DELETE /users/:id', () => {
       .expect((res) => {
         expect(res.body._id.toString()).toEqual(user._id.toString());
       })
-      .end(done)
-      // .end(() => {
-      //   request(app)
-      //   .get('/users')
-      //   .expect(200)
-      //   .expect(users => {
-      //     expect(users).not.toContain(user);
-      //   })
-      //   .end(done)
-      // });
+      .end(() => {
+        request(app)
+        .get('/users')
+        .expect(200)
+        .expect(users => {
+          expect(users).not.toContain(user);
+        })
+        .end(done)
+      });
   });
 
   it('should throw 404 for not-existent id', (done) => {
@@ -102,6 +101,58 @@ describe('DELETE /users/:id', () => {
       })
       .end(done);
   });
+
+  it('should not delete the only remaining super-admin', (done) => {
+    const user = users[2];
+
+    request(app)
+      .delete(`/users/${user._id}`)
+      .expect(403)
+      .end(() => {
+        User.find({role: 'super-admin'})
+          .then(users => {
+            expect(users.length).toBe(1)
+            done();
+          })
+          .catch(e => {
+            done(e);
+          })
+      });
+  });
+
+  it('should delete a super-admin if there is more than one', (done => {
+    const superOne = users[2];
+  
+    const superTwo = new User({
+      firstName: 'Jim',
+      lastName: 'Jimbo',
+      email: 'jim@jimbo.com',
+      role: 'super-admin'
+    })
+
+    superTwo.save()
+      .then(() => {
+        request(app)
+        .delete(`/users/${superOne._id}`)
+        .expect(200)
+        .end(() => {
+          User.find({role: 'super-admin'})
+            .then(users => {
+              expect(users.length).toBe(1);
+              console.log(users.length);
+              done();
+            })
+            .catch(e => {
+              done(e);
+            });
+        });
+      })
+      .catch(e => {
+        done(e);
+      });
+
+  }))
+
 });
 
 describe('PUT /users/:id', () => {

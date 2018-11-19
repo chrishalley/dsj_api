@@ -19,6 +19,16 @@ const users = [
     status: 'approved',
     password: 'password'
   },
+  {
+    _id: new ObjectID(),
+    firstName: 'Jeff',
+    lastName: 'Jeffson',
+    email: 'jeff@jeffson.com',
+    status: 'approved',
+    password: 'password',
+    role: 'super-admin'
+  },
+
 ];
 
 const populateUsers = (done) => {
@@ -26,8 +36,9 @@ const populateUsers = (done) => {
   .then(() => {
     var userOne = new User(users[0]).save();
     var userTwo = new User(users[1]).save();
+    var userThree = new User(users[2]).save();
 
-    return Promise.all([userOne, userTwo]);
+    return Promise.all([userOne, userTwo, userThree]);
   })
   .then(users => {
     // console.log('users', users);
