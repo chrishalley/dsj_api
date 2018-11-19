@@ -8,7 +8,6 @@ const users = [
     firstName: 'Jack',
     lastName: 'Jackson',
     email: 'jack@jackson.com',
-    status: 'pending',
     password: 'password'
   },
   {
@@ -16,7 +15,6 @@ const users = [
     firstName: 'Dave',
     lastName: 'Daveson',
     email: 'dave@daveson.com',
-    status: 'approved',
     password: 'password'
   },
   {
@@ -24,7 +22,6 @@ const users = [
     firstName: 'Jeff',
     lastName: 'Jeffson',
     email: 'jeff@jeffson.com',
-    status: 'approved',
     password: 'password',
     role: 'super-admin'
   },

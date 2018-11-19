@@ -1,12 +1,75 @@
 const expect = require('expect');
 const request = require('supertest');
+// const mockery = require('mockery');
+// const nodemailerMock = require('nodemailer-mock');
 
-const {app} = require('./../server');
+let {app} = require('./../server');
 const {User} = require('./../models/user');
 const {populateUsers, users} = require('./seed/seed');
 const applicationError = require('../errors/applicationErrors');
 
 beforeEach(populateUsers);
+
+describe('POST /users', () => {
+  // app = null;
+
+  // before(() => {
+  //   mockery.enable({
+  //     warnOnUnregistered: false
+  //   });
+    
+  //   mockery.registerMock('nodemailer', nodemailerMock);
+  //   app = require('./../server');
+  // });
+
+  // afterEach(() => {
+  //   nodemailerMock.mock.reset();
+  // });
+
+  // after(() => {
+  //   mockery.deregisterAll();
+  //   mockery.disable();
+  // });
+  
+  it('should add a user with default role of "admin"', function(done) {
+    this.timeout(8000);
+
+    const user = {
+      firstName: 'Kelly',
+      lastName: 'Kellyson',
+      email: 'kelly@kellyson.com'
+    };
+    
+    request(app)
+      .post('/users')
+      .send(user)
+      .expect(200)
+      .expect((res) => {
+        console.log(res.body);
+      })
+      .end(done)
+  });
+
+  it('should not add a user with email address that already exists', (done) => {
+    const user = {
+      firstName: users[0].firstName,
+      lastName: users[0].lastName,
+      email: users[0].email,
+    };
+
+    request(app)
+      .post('/users')
+      .send(user)
+      .expect(500)
+      .end(done);
+  });
+
+  // it('should add a user with role of "super-admin" if specified', (done) => {
+  //   done();
+  // });
+
+});
+
 //GET /users/:id
 describe('GET /users/:id', () => {
   it('should return a user object', done => {
@@ -52,7 +115,7 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe.only('DELETE /users/:id', () => {
+describe('DELETE /users/:id', () => {
   it('should delete a user by id', (done) => {
     const user =  users[0];
     
@@ -139,7 +202,6 @@ describe.only('DELETE /users/:id', () => {
           User.find({role: 'super-admin'})
             .then(users => {
               expect(users.length).toBe(1);
-              console.log(users.length);
               done();
             })
             .catch(e => {
@@ -224,7 +286,7 @@ describe('POST /users/login', () => {
       .end(done);
   });
 
-  it('should return a 200 for an approved existing user', (done) => {
+  it('should return a 200 for an  existing user', (done) => {
     const  user = users[1];
 
     request(app)
@@ -240,23 +302,6 @@ describe('POST /users/login', () => {
       })
       .end(done);
   });
-
-  it('should return 403 for a non-approved user', (done) => {
-    const user = users[0];
-    const error = new applicationError.UserForbidden();
-
-    request(app)
-      .post('/users/login')
-      .send({
-        email: user.email,
-        password: user.password
-      })
-      .expect(403)
-      .expect(res => {
-        expect(res.body.message).toBe(error.message);
-      })
-      .end(done);
-  })
 
   it('should return 400 for a wrong password', (done) => {
     const user = users[1];

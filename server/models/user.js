@@ -25,8 +25,7 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     minLength: 6,
-    default: 'password',
-    select: false
+    default: 'password'
   },
   dateApplied: {
     type: Number,
@@ -36,11 +35,6 @@ var UserSchema = new mongoose.Schema({
   dateApproved: {
     type: Number,
     required: false
-  },
-  status: {
-    type: String,
-    required: true,
-    default: 'approved'
   },
   role: {
     type: String,
@@ -144,7 +138,7 @@ UserSchema.methods.checkPassword = function(password) {
       if (!res) {
         throw new applicationError.PasswordIncorrectError();
       }
-      return true;
+      return user;
     })
     .catch(e => {
       throw e;

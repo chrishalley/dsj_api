@@ -3,12 +3,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const generatePassword = require('generate-password');
 
 const {mongoose} = require('./db/mongoose');
 const {errorMessage} = require('./utils/utils');
 const applicationError = require('./errors/applicationErrors');
 const utils = require('./utils/utils');
 const emails = require('./mail/emails');
+const {nodemailerConfig} = require('./config/nodemailer');
 
 const app = express();
 const port = process.env.PORT;
@@ -22,9 +24,7 @@ app.use(cors(corsOptions));
 
 const {User} = require('./models/user');
 
-const transporterConfig = JSON.parse(process.env.NODEMAILER_CONFIG);
-
-let transporter = nodemailer.createTransport(transporterConfig);
+let transporter = nodemailer.createTransport(nodemailerConfig.transporter);
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
@@ -79,32 +79,40 @@ app.get('/users', (req, res) => {
 
 app.post('/users', (req, res) => {
   const user = req.body;
-  console.log(user);
+  
+  // const password = generatePassword.generate({
+    //   length: 10,
+    //   numbers: true,
+    //   strict: true
+    // });
+    
   const newUser = new User({
     email: user.email,
-    password: user.password,
+    password: 'password',
     firstName: user.firstName,
-    lastName: user.lastName,
-    status: 'approved'
+    lastName: user.lastName
   });
 
   newUser.save()
     .then(doc => {
-      doc.password = null;
-      let mailOptions = new emails.newUserWelcome(doc);
 
+      let mailOptions = new emails.newUserWelcome(doc);
+      
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-          return console.log(error);
+          console.log('ERROR OCCURRED', error);
+          const e = new applicationError.GeneralError('sendMail() failed');
+          throw e;
+        } else {
+          console.log('Message sent %s', info.messageId);
+          console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+          res.status(200).send(doc);
         }
-        console.log('Message sent %s', info.messageId);
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
       })
-      res.status(200).send(doc);
     })
     .catch(e => {
-      console.log(e);
-      res.status(400).send(e);
+      // console.log('FKIN error: ', e);
+      res.status(e.status ? e.status : 500).send(e);
     });
 });
 
@@ -178,12 +186,7 @@ app.post('/users/login', (req, res) => {
   const credentials = req.body;
   User.findByEmail(credentials.email)
     .then(user => {
-      if (user.status !== 'approved') {
-        throw new applicationError.UserForbidden();
-      }
       return user.checkPassword(credentials.password)
-      .then(() => user)
-      .catch(e => { throw e });
     })
     .then(user => {
       return user.generateAuthToken();
