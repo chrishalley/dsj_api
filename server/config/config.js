@@ -5,6 +5,9 @@ if (env === 'development' || env === 'test') {
   var envConfig = config[env];
 
   Object.keys(envConfig).forEach((key) => {
+    if (key === 'NODEMAILER_CONFIG') {
+      envConfig[key] = JSON.stringify(envConfig[key]);
+    }
     process.env[key] = envConfig[key];
   });
 }

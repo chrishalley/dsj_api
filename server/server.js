@@ -8,6 +8,7 @@ const {mongoose} = require('./db/mongoose');
 const {errorMessage} = require('./utils/utils');
 const applicationError = require('./errors/applicationErrors');
 const utils = require('./utils/utils');
+const emails = require('./mail/emails');
 
 const app = express();
 const port = process.env.PORT;
@@ -21,31 +22,9 @@ app.use(cors(corsOptions));
 
 const {User} = require('./models/user');
 
-// NODEMAILER CONFIG
+const transporterConfig = JSON.parse(process.env.NODEMAILER_CONFIG);
 
-const account = {
-  user: 'qb45rpddnpyiub3l@ethereal.email',
-  pass: 'uQeGPhpt8HVAfmu83D'
-};
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.ethereal.email',
-  port: 587,
-  secure: false,
-  auth: {
-    user: account.user,
-    pass: account.pass
-  }
-})
-
-  // SETUP EMAIL DATA
-  let mailOptions = {
-    from: '"Fred Foo" <foo@example.com>',
-    to: 'bar@example.com',
-    subject: 'Hello from Nodemailer!',
-    text: 'Whoa, this freaking works!',
-    html: '<b>This is awesome</b>'
-  };
+let transporter = nodemailer.createTransport(transporterConfig);
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
@@ -111,6 +90,9 @@ app.post('/users', (req, res) => {
 
   newUser.save()
     .then(doc => {
+      doc.password = null;
+      let mailOptions = new emails.newUserWelcome(doc);
+
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           return console.log(error);

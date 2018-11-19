@@ -25,7 +25,8 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     minLength: 6,
-    default: 'password'
+    default: 'password',
+    select: false
   },
   dateApplied: {
     type: Number,
