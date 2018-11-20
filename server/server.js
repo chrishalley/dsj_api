@@ -83,10 +83,8 @@ app.post('/users', (req, res) => {
     // });
     
   const newUser = new User({
-    email: user.email,
-    password: 'password',
-    firstName: user.firstName,
-    lastName: user.lastName
+    ...user,
+    password: 'password'
   });
 
   if (process.env.NODE_ENV !== 'test') {
@@ -101,15 +99,7 @@ app.post('/users', (req, res) => {
         }
       };
       const message = new emails.newUserWelcome(options);
-      console.log(message);
 
-      // const message = {
-      //   recipient: 'chrishalley86@gmail.com',
-      //   subject: 'Welcome Email',
-      //   text: 'This is some dummy text',
-      //   inline: null,
-      //   html: '<p>This is some dumy html</p>'
-      // }
       return emails.sendMail(message)
     })
     return Promise.all([userProm, mailProm])

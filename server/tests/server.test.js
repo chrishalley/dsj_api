@@ -1,7 +1,5 @@
 const expect = require('expect');
 const request = require('supertest');
-// const mockery = require('mockery');
-// const nodemailerMock = require('nodemailer-mock');
 
 let {app} = require('./../server');
 const {User} = require('./../models/user');
@@ -10,27 +8,8 @@ const applicationError = require('../errors/applicationErrors');
 
 beforeEach(populateUsers);
 
-describe('POST /users', () => {
-  // app = null;
+describe.only('POST /users', () => {
 
-  // before(() => {
-  //   mockery.enable({
-  //     warnOnUnregistered: false
-  //   });
-    
-  //   mockery.registerMock('nodemailer', nodemailerMock);
-  //   app = require('./../server');
-  // });
-
-  // afterEach(() => {
-  //   nodemailerMock.mock.reset();
-  // });
-
-  // after(() => {
-  //   mockery.deregisterAll();
-  //   mockery.disable();
-  // });
-  
   it('should add a user with default role of "admin"', function(done) {
     this.timeout(8000);
 
@@ -45,7 +24,8 @@ describe('POST /users', () => {
       .send(user)
       .expect(200)
       .expect((res) => {
-        console.log(res.body);
+        expect(res.body).toMatchObject(user);
+        expect(res.body.role).toBe('admin');
       })
       .end(done)
   });
@@ -61,12 +41,30 @@ describe('POST /users', () => {
       .post('/users')
       .send(user)
       .expect(500)
+      .expect(res => {
+        expect(res.body.code).toBe(11000)
+      })
       .end(done);
   });
 
-  // it('should add a user with role of "super-admin" if specified', (done) => {
-  //   done();
-  // });
+  it('should add a user with role of "super-admin" if specified', (done) => {
+    const user = {
+      firstName: 'Super',
+      lastName: 'Admin',
+      email: 'super@admin.com',
+      role: 'super-admin'
+    }
+
+    request(app)
+      .post('/users')
+      .send(user)
+      .expect(200)
+      .expect(res => {
+        expect(res.body).toMatchObject(user)
+        expect(res.body.role).toBe('super-admin')
+      })
+      .end(done);
+  });
 
 });
 
