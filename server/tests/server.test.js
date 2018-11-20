@@ -8,7 +8,7 @@ const applicationError = require('../errors/applicationErrors');
 
 beforeEach(populateUsers);
 
-describe.only('POST /users', () => {
+describe('POST /users', () => {
 
   it('should add a user with default role of "admin"', function(done) {
     this.timeout(8000);

@@ -212,21 +212,21 @@ app.put('/users/:id', (req, res) => {
     const error = new applicationError.InvalidRequest();
     return res.status(error.status).send(error);
   } else {
-    User.findUserById(id)
-      .then((user) => {
-        user.updateOne({
-          $set: update
-        })
-        .then(() => {
-          res.status(200).send('User updated');
-        })
-        .catch(e => {
-          throw e;
-        })
+  User.findUserById(id)
+    .then(user => {
+      return user.updateOne({
+        $set: update
       })
-      .catch(e => {
-        res.status(500).send(e);
-      });
+    })
+    .then(() => {
+      return User.findById(id)
+    })
+    .then(user => {
+      res.status(200).send(user);
+    })
+    .catch(e => {
+      res.status(500).send(e);
+    })
   }
 });
 
