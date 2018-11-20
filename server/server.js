@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const email = require('./mail/emails.js');
 const generatePassword = require('generate-password');
 
 const {mongoose} = require('./db/mongoose');
@@ -78,7 +79,7 @@ app.get('/users', (req, res) => {
 // SAVE NEW USER
 
 app.post('/users', (req, res) => {
-  const user = req.body;
+  let user = req.body;
   
   // const password = generatePassword.generate({
     //   length: 10,
@@ -93,27 +94,46 @@ app.post('/users', (req, res) => {
     lastName: user.lastName
   });
 
-  newUser.save()
-    .then(doc => {
-
-      let mailOptions = new emails.newUserWelcome(doc);
+  if (process.env.NODE_ENV !== 'test') {
+    const userProm = newUser.save();
+    const mailProm = userProm.then(user => {
       
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.log('ERROR OCCURRED', error);
-          const e = new applicationError.GeneralError('sendMail() failed');
-          throw e;
-        } else {
-          console.log('Message sent %s', info.messageId);
-          console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-          res.status(200).send(doc);
+      const options = {
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: 'chrishalley86@gmail.com'
         }
-      })
+      };
+      const message = new emails.newUserWelcome(options);
+      console.log(message);
+
+      // const message = {
+      //   recipient: 'chrishalley86@gmail.com',
+      //   subject: 'Welcome Email',
+      //   text: 'This is some dummy text',
+      //   inline: null,
+      //   html: '<p>This is some dumy html</p>'
+      // }
+      return emails.sendMail(message)
     })
-    .catch(e => {
-      // console.log('FKIN error: ', e);
-      res.status(e.status ? e.status : 500).send(e);
-    });
+    return Promise.all([userProm, mailProm])
+      .then(([user, mail]) => {
+        res.status(200).send(user)
+      })
+      .catch(e => {
+        console.log(e);
+        res.status(e.status ? e.status : 500).send(e);
+      })
+    } else {
+      newUser.save()
+      .then((user) => {
+        res.status(200).send(user)
+      })
+      .catch(e => {
+        res.status(e.status ? e.status : 500).send(e);  
+      })
+    }
 });
 
 // DELETE USER
