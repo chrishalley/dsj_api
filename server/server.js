@@ -2,8 +2,6 @@ require('./config/config.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
-const email = require('./mail/emails.js');
 const generatePassword = require('generate-password');
 
 const {mongoose} = require('./db/mongoose');
@@ -11,7 +9,6 @@ const {errorMessage} = require('./utils/utils');
 const applicationError = require('./errors/applicationErrors');
 const utils = require('./utils/utils');
 const emails = require('./mail/emails');
-const {nodemailerConfig} = require('./config/nodemailer');
 
 const app = express();
 const port = process.env.PORT;
@@ -24,8 +21,6 @@ var corsOptions = {
 app.use(cors(corsOptions));
 
 const {User} = require('./models/user');
-
-let transporter = nodemailer.createTransport(nodemailerConfig.transporter);
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
