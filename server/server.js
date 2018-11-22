@@ -241,9 +241,7 @@ app.post('/users/:id/set-password', (req, res) => {
       if (!user) {
         throw new applicationError.UserNotFoundError();
       }
-      return user;
-    })
-    .then(user => {
+
       return user.checkPassword(currentPassword)
         .then((valid) => {
           if (valid) {
