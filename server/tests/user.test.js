@@ -141,3 +141,18 @@ describe('User.findUserByToken', () => {
       });
   })
 });
+
+describe('user.genPassResetURL', () => {
+  it('should return a URL', () => {
+    User.findById(users[0]._id)
+      .then(user => {
+        const url = user.genPassResetURL();
+        console.log('URL: ', url);
+        
+      })
+      .catch(e => {
+        console.log(e);
+      })
+
+  })
+});

@@ -49,6 +49,12 @@ class UserForbidden extends ApplicationError {
   }
 }
 
+class TokenExpired extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'Token has expired', status || 403);
+  }
+}
+
 module.exports = UserNotFoundError;
 
 module.exports = {
@@ -58,5 +64,6 @@ module.exports = {
   InvalidUserID,
   InvalidRequest,
   GeneralError,
-  UserForbidden
+  UserForbidden,
+  TokenExpired
 };

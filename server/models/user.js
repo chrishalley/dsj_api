@@ -122,7 +122,6 @@ UserSchema.methods.setPassword = function(password) {
           }
         })
       })
-      .then(user => user)
       .catch(e => {
         throw e;
       });
@@ -205,6 +204,16 @@ UserSchema.statics.findUserByToken = function(token) {
         throw new applicationError.UserNotFoundError();
       });
   }
+};
+
+UserSchema.methods.genPassResetURL = function() {
+  user = this;
+  const payload = {
+    _id: user._id,
+  };
+  const secret = user.password + user.dateApplied;
+  const token = jwt.sign(payload, secret).toString();
+  return `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/password-reset?token=${token}`;
 };
 
 UserSchema.pre('save', function (next) {

@@ -1,5 +1,6 @@
 const expect = require('expect');
 const request = require('supertest');
+const bcrypt = require('bcryptjs');
 
 let {app} = require('./../server');
 const {User} = require('./../models/user');
@@ -374,3 +375,56 @@ describe('POST /users/:id/set-password', () => {
       .end(done);
   });
 });
+
+describe('POST /users/reset-password', () => {
+  it('should receive an email', (done) => {
+    const email = users[0].email;
+
+    request(app)
+      .post('/users/reset-password')
+      .send({email: email})
+      .expect((res) => {
+        console.log('res.body: ', res.body);
+        expect(res.body).toMatchObject({
+          email: email
+        })
+      })
+      .end(done);
+  })
+});
+
+describe('POST /users/:id/resetPassword', () => {
+  it('should change a users password', function(done) {
+    this.timeout(8000);
+
+    const user = users[0];
+    oldPassword = user.password;
+    newPassword = 'aNewPassword';
+
+    request(app)
+      .post(`/users/${user._id}/resetPassword`)
+      .send({newPassword})
+      .expect(200)
+      .end(() => {
+        User.findById(user._id)
+          .then(user => {
+            return new Promise((resolve, reject) => {
+              bcrypt.compare(oldPassword, user.password, function(err, res) {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve(res);
+                }
+              });
+            });
+        })
+        .then(res => {
+          expect(res).toBe(false);
+          done();
+        })
+        .catch(e => {
+          done(e);
+        })
+      })
+  })
+})

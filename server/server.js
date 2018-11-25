@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const generatePassword = require('generate-password');
+const jwt = require('jsonwebtoken');
 
 const {mongoose} = require('./db/mongoose');
 const {errorMessage} = require('./utils/utils');
@@ -264,6 +265,105 @@ app.post('/users/:id/set-password', (req, res) => {
     })
     .catch(e => {
       res.status(e.status || 500).send(e.message);
+    });
+});
+
+// USER RESET-PASSWORD
+app.post('/users/reset-password', (req, res) => {
+  const email = req.body.email;
+
+  if (process.env.NODE_ENV !== 'test') {
+    const UserProm = User.findByEmail(email)
+    const mailProm = UserProm.then(user => {
+
+      // Generate jwt 
+      const resetURL = user.genPassResetURL();
+        const options = {
+          resetURL,
+          user: {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email
+          }
+        };
+        const message = new emails.forgotPasswordReset(options)
+        return emails.sendMail(message)
+    })
+
+    return Promise.all([UserProm, mailProm])
+      .then(([user, mail]) => {
+        res.status(200).send(user)
+      })
+      .catch(e => {
+        console.log(e);
+        res.status(e.status ? e.status : 500).send(e);
+      })
+    
+  } else {
+    User.findByEmail(email)
+      .then(user => {
+        res.status(200).send(user);
+      })
+      .catch(e => {
+        res.status(e.status).send(e);
+      })
+  }
+})
+
+// Verify password-reset-link
+app.post('/users/verify-password-reset-token', (req, res) => {
+  const id = req.body._id;
+  const token = req.body.token;
+
+  const validID = mongoose.Types.ObjectId.isValid(id);
+  
+  if (!validID) {
+    console.log('Invalid ID');
+    const error = new applicationError.InvalidUserID();
+    console.log(error)
+    return res.status(error.status).json(error);
+  }
+
+  return User.findById(id)
+    .then(user => {
+      if (!user) {
+        console.log('ERROR: No user found!')
+        throw new applicationError.UserNotFoundError();
+      }
+      let decoded
+      try {
+        decoded = jwt.verify(token, user.password + user.dateApplied)
+        if (decoded._id.toString() !== user._id.toString()) {
+          throw new applicationError.TokenExpired();
+        }
+        return res.status(200).send('TRue')
+      } catch(e) {
+        res.status(403).send('Token Invalid')
+      }
+    })
+    .catch(error => {
+      console.log(error)
+      return res.status(error.status).send(error);
+    }) 
+})
+
+// Reset password by user id
+app.post('/users/:id/resetPassword', (req, res) => {
+  const id = req.params.id;
+  const newPassword = req.body.newPassword
+  User.findById(id)
+    .then(user => {
+      console.log('user1: ', user);
+      return user.setPassword(newPassword)
+    })
+    .then(user => {
+      console.log('user2: ', user);
+      res.status(200).send('Password successfully reset')
+    })
+    .catch(e => {
+      console.log(e)
+      res.status(e.status).send(e.message)
     });
 });
 
