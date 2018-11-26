@@ -90,7 +90,7 @@ app.post('/users', (req, res) => {
       numbers: true,
       strict: true
     });
-    // Added a pointless comment
+
   let newUser = new User(user);
   newUser.password = password;
 
@@ -106,7 +106,7 @@ app.post('/users', (req, res) => {
         user: {
           firstName: user.firstName,
           lastName: user.lastName,
-          email: 'chrishalley86@gmail.com'
+          email: user.email
         }
       };
       const message = new emails.newUserWelcome(options);
