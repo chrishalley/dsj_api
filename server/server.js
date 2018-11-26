@@ -84,10 +84,8 @@ app.post('/users', (req, res) => {
       strict: true
     });
     // Added a pointless comment
-  const newUser = new User({
-    ...user,
-    password: password
-  });
+  const newUser = new User(user);
+  newUser.password = password;
 
   if (process.env.NODE_ENV !== 'test') {
     const userProm = newUser.save();
