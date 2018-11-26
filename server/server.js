@@ -15,13 +15,20 @@ const app = express();
 const port = process.env.PORT;
 app.use(bodyParser.json());
 
-
-var corsOptions = {
-  origin: 'http://localhost:3000',
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+// CORS Options Config
+if (process.env !== 'production') {
+  var corsOptions = {
+    origin: 'http://localhost:3000',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  } 
+} else {
+  var corsOptions = {
+    origin: 'https://cibolo-app.herokuapp.com/',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  }
 }
-app.use(cors(corsOptions));
 
+app.use(cors(corsOptions));
 const {User} = require('./models/user');
 
 app.listen(port, () => {
