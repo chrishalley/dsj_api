@@ -10,7 +10,7 @@
     "start": "node server/server.js"
   },
   "engines": {
-    "node": "8.1.1"
+    "node": "8.10.0"
   },
   "author": "Chris Halley",
   "license": "ISC",

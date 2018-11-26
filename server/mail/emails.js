@@ -1,5 +1,13 @@
 // SETUP EMAIL DATA
-const {mailgunConfig} = require('./../config/mailgun.config.js');
+const mailgunConfig;
+if (process.env.NODE_ENV = 'production') {
+  mailgunConfig = {
+    apiKey: process.env.MAILGUN_API_KEY,
+    domain: process.env.MAILGUN_DOMAIN, 
+  }
+} else {
+  mailgunConfig = require('./../config/mailgun.config.js');
+}
 const mailgun = require('mailgun-js')(mailgunConfig);
 
 let fromField = 'The Priory <bookings@dsj.org.uk>'
