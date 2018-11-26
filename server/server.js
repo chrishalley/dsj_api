@@ -23,7 +23,7 @@ if (process.env.NODE_ENV !== 'production') {
   } 
 } else {
   var corsOptions = {
-    origin: 'https://cibolo-app.herokuapp.com/',
+    origin: 'https://cibolo-app.herokuapp.com',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
   }
 }
