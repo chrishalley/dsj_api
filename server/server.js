@@ -84,7 +84,7 @@ app.post('/users', (req, res) => {
       strict: true
     });
     // Added a pointless comment
-  const newUser = new User(user);
+  let newUser = new User(user);
   newUser.password = password;
 
   if (process.env.NODE_ENV !== 'test') {
