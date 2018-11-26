@@ -16,7 +16,7 @@ const port = process.env.PORT;
 app.use(bodyParser.json());
 
 // CORS Options Config
-if (process.env !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   var corsOptions = {
     origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
