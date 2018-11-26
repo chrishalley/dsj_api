@@ -142,13 +142,12 @@ describe('User.findUserByToken', () => {
   })
 });
 
-describe('user.genPassResetURL', () => {
-  it('should return a URL', () => {
+describe('user.genPassResetToken', () => {
+  it('should return a string', () => {
     User.findById(users[0]._id)
       .then(user => {
-        const url = user.genPassResetURL();
-        console.log('URL: ', url);
-        
+        const token = user.genPassResetToken();
+        expect(typeof token).toBe('string');
       })
       .catch(e => {
         console.log(e);

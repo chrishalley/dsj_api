@@ -31,10 +31,12 @@ class newUserWelcome {
     this.subject = 'User account created';
     this.text = 
     `Welcome, ${options.user.firstName}!\n
-    A new user account has been created for you. Please go to [insert link here] to set your password.`;
+    A new user account has been created for you in The Priory Events Management app. First, we'll need you to set a password using the link below.\n\n
+    Set password: ${options.setPassURL}`;
     this.html = `
     <h1>Welcome, ${options.user.firstName}!<h1>
-    <p>A new user account has been created for you. Please go to [insert link here] to set your password.</p>`;
+    <p>A new user account has been created for you in The Priory Events Management app. First, we'll need you to set a password using the link below.</p>
+    <a href="${options.setPassURL}">Set password</a>`;
     this.attachment = null;
   }
 };

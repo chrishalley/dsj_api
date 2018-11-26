@@ -24,8 +24,7 @@ var UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minLength: 6,
-    default: 'password'
+    minLength: 6
   },
   dateApplied: {
     type: Number,
@@ -206,14 +205,13 @@ UserSchema.statics.findUserByToken = function(token) {
   }
 };
 
-UserSchema.methods.genPassResetURL = function() {
+UserSchema.methods.genPassResetToken = function() {
   user = this;
   const payload = {
     _id: user._id,
   };
   const secret = user.password + user.dateApplied;
-  const token = jwt.sign(payload, secret).toString();
-  return `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/password-reset?token=${token}`;
+  return jwt.sign(payload, secret).toString();
 };
 
 UserSchema.pre('save', function (next) {

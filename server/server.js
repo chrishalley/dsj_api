@@ -77,22 +77,26 @@ app.get('/users', (req, res) => {
 app.post('/users', (req, res) => {
   let user = req.body;
   
-  // const password = generatePassword.generate({
-    //   length: 10,
-    //   numbers: true,
-    //   strict: true
-    // });
+  const password = generatePassword.generate({
+      length: 16,
+      numbers: true,
+      strict: true
+    });
     
   const newUser = new User({
     ...user,
-    password: 'password'
+    password: password
   });
 
   if (process.env.NODE_ENV !== 'test') {
     const userProm = newUser.save();
     const mailProm = userProm.then(user => {
+
+      const token = user.genPassResetToken();
+      const setPassURL = `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/set-password?token=${token}`
       
       const options = {
+        setPassURL,
         user: {
           firstName: user.firstName,
           lastName: user.lastName,
@@ -277,7 +281,9 @@ app.post('/users/reset-password', (req, res) => {
     const mailProm = UserProm.then(user => {
 
       // Generate jwt 
-      const resetURL = user.genPassResetURL();
+      const token = user.genPassResetToken();
+      const resetURL = `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/password-reset?token=${token}`
+      
         const options = {
           resetURL,
           user: {
@@ -354,11 +360,9 @@ app.post('/users/:id/resetPassword', (req, res) => {
   const newPassword = req.body.newPassword
   User.findById(id)
     .then(user => {
-      console.log('user1: ', user);
       return user.setPassword(newPassword)
     })
     .then(user => {
-      console.log('user2: ', user);
       res.status(200).send('Password successfully reset')
     })
     .catch(e => {

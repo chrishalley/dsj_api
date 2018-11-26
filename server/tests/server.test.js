@@ -67,6 +67,53 @@ describe('POST /users', () => {
       .end(done);
   });
 
+  it('should create unique secure passwords for each new user', (done) => {
+    let userOne = new User({
+      firstName: 'User',
+      lastName: 'One',
+      email: 'user@one.com'
+    });
+
+    let userTwo = new User({
+      firstName: 'User',
+      lastName: 'Two',
+      email: 'user@two.com'
+    });
+
+    userOne = request(app)
+      .post('/users')
+      .send(userOne)
+    
+    userTwo = request(app)
+      .post('/users')
+      .send(userTwo)
+
+    Promise.all([userOne, userTwo])
+      .then(res => {
+        const passwordOne = User.findById(res[0].body._id)
+          .then(user => {
+            return user.password
+          })
+        
+          const passwordTwo = User.findById(res[1].body._id)
+        .then(user => {
+          return user.password
+        })
+
+        return Promise.all([passwordOne, passwordTwo])
+          .then(res => {
+            expect(res[0]).not.toEqual(res[1])
+            done();
+          })
+          .catch(e => {
+            throw e;
+          })
+      })
+      .catch(e => {
+        done(e);
+      });
+
+  });
 });
 
 //GET /users/:id
@@ -189,7 +236,8 @@ describe('DELETE /users/:id', () => {
       firstName: 'Jim',
       lastName: 'Jimbo',
       email: 'jim@jimbo.com',
-      role: 'super-admin'
+      role: 'super-admin',
+      password: 'password'
     })
 
     superTwo.save()
@@ -384,7 +432,6 @@ describe('POST /users/reset-password', () => {
       .post('/users/reset-password')
       .send({email: email})
       .expect((res) => {
-        console.log('res.body: ', res.body);
         expect(res.body).toMatchObject({
           email: email
         })
