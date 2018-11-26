@@ -82,7 +82,7 @@ app.post('/users', (req, res) => {
       numbers: true,
       strict: true
     });
-    
+    // Added a pointless comment
   const newUser = new User({
     ...user,
     password: password
