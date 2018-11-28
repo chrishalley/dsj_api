@@ -31,7 +31,7 @@ describe('POST /users', () => {
       .end(done)
   });
 
-  it('should not add a user with email address that already exists', (done) => {
+  it.only('should not add a user with email address that already exists', (done) => {
     const user = {
       firstName: users[0].firstName,
       lastName: users[0].lastName,

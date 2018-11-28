@@ -211,6 +211,7 @@ app.post('/users/login', (req, res) => {
       res.status(200).send(user);
     })
     .catch(e => {
+      console.log(e);
       res.status(e.status).send(e);
     });
 });
