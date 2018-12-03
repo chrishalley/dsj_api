@@ -3,7 +3,7 @@ const request = require('supertest');
 const bcrypt = require('bcryptjs');
 
 let {app} = require('./../server');
-const {User} = require('./../models/user');
+const User = require('./../models/user');
 const {populateUsers, users} = require('./seed/seed');
 const applicationError = require('../errors/applicationErrors');
 
@@ -31,7 +31,7 @@ describe('POST /users', () => {
       .end(done)
   });
 
-  it.only('should not add a user with email address that already exists', (done) => {
+  it('should not add a user with email address that already exists', (done) => {
     const user = {
       firstName: users[0].firstName,
       lastName: users[0].lastName,
@@ -315,13 +315,13 @@ describe('GET /users', () => {
   });
 });
 
-describe('POST /users/login', () => {
+describe('POST /auth/login', () => {
   
   it('should return a 404 for a non-existing user', (done) => {
     const user = users[0];
 
     request(app)
-      .post('/users/login')
+      .post('/auth/login')
       .send({
         email: 'jhfdkjdhskjf@kldlfhdslkf.com',
         password: user.password
@@ -337,7 +337,7 @@ describe('POST /users/login', () => {
     const  user = users[1];
 
     request(app)
-      .post('/users/login')
+      .post('/auth/login')
       .send({
         email: user.email,
         password: user.password
@@ -355,7 +355,7 @@ describe('POST /users/login', () => {
     const error = new applicationError.PasswordIncorrectError();
 
     request(app)
-      .post('/users/login')
+      .post('/auth/login')
       .send({
         email: user.email,
         password: 'passworten'

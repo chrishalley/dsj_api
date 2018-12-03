@@ -2,7 +2,7 @@ const expect = require('expect');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 
-const {User} = require('./../models/user');
+const User = require('./../models/user');
 const {populateUsers, users} = require('./seed/seed');
 
 beforeEach(populateUsers);

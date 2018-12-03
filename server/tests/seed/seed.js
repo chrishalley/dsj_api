@@ -1,5 +1,5 @@
 const {ObjectID} = require('mongodb');
-const {User} = require('./../../models/user')
+const User = require('./../../models/user')
 
 
 const users = [

@@ -6,10 +6,10 @@ mongoose.connect(process.env.MONGODB_URI, {
   useCreateIndex: true
 })
 .then(() => {
-  console.log('success');
+  // console.log('success');
 })
 .catch(e => {
-  console.log(e);
+  // console.log(e);
 })
 
 module.exports = {
