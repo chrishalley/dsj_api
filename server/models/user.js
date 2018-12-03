@@ -216,8 +216,8 @@ UserSchema.methods.genPassResetToken = function() {
 
 UserSchema.pre('save', function (next) {
   var user = this;
-
   if (user.isModified('password')) {
+    console.log(user)
     bcrypt.genSalt(10, (err, salt) => {
       if (err) {
         return console.log(err);

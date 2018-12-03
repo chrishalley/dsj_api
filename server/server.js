@@ -2,17 +2,20 @@ require('./config/config.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const morgan = require('morgan');
+require('./db/mongoose');
 
 const app = express();
+app.use(bodyParser.json());
 
 const usersRoutes = require('./api/routes/users');
 const authRoutes = require('./api/routes/auth');
 
+app.use(morgan('dev'));
 app.use('/users', usersRoutes);
 app.use('/auth', authRoutes);
 
 const port = process.env.PORT;
-app.use(bodyParser.json());
 
 // CORS Options Config
 if (process.env.NODE_ENV !== 'production') {
@@ -64,6 +67,20 @@ app.post('/events', (req, res) => {
 //     })
 // });
 
+app.use((req, res, next) => {
+  const error = new Error('Not found');
+  error.status = 404;
+  next(error);
+})
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: {
+      message: error.message
+    }
+  });
+});
 
 module.exports = {
   app

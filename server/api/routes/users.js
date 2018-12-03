@@ -7,6 +7,8 @@ const applicationError = require('../../errors/applicationErrors');
 const utils = require('../../utils/utils');
 const jwt = require('jsonwebtoken');
 
+const UsersController = require('../controllers/users');
+
 const {User} = require('../../models/user');
 
 // GET USERS LIST
@@ -14,6 +16,7 @@ const {User} = require('../../models/user');
 router.get('/', (req, res, next) => {
   User.find({})
     .then(users => {
+      console.log('HERE')
       res.status(200).send(users);
     })
     .catch(e => {
@@ -24,6 +27,7 @@ router.get('/', (req, res, next) => {
 // SAVE NEW USER
 
 router.post('/', (req, res, next) => {
+  console.log('BODY: ', req.body);
   let user = req.body;
   
   const password = generatePassword.generate({
@@ -34,11 +38,10 @@ router.post('/', (req, res, next) => {
 
   let newUser = new User(user);
   newUser.password = password;
-
+  
   if (process.env.NODE_ENV !== 'test') {
     const userProm = newUser.save();
     const mailProm = userProm.then(user => {
-
       const token = user.genPassResetToken();
       const setPassURL = `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/set-password?token=${token}`
       
@@ -51,7 +54,7 @@ router.post('/', (req, res, next) => {
         }
       };
       const message = new emails.newUserWelcome(options);
-
+      
       return emails.sendMail(message)
     })
     return Promise.all([userProm, mailProm])
