@@ -14,7 +14,7 @@ router.get('/', checkAuth, UsersController.users_get_users_list);
 router.post('/', checkAuth, checkSuperAdmin, UsersController.users_save_new_user);
 
 // GET USER INFO
-router.get('/:id', UsersController.users_get_single_user);
+router.get('/:id', checkAuth, UsersController.users_get_single_user);
 
 // DELETE USER
 router.delete('/:id', UsersController.users_delete_user);

@@ -9,10 +9,14 @@ const utils = require('../../utils/utils');
 exports.users_get_users_list = (req, res, next) => {
   User.find({})
     .then(users => {
-      res.status(200).send(users);
+      if (users.length > 0) {
+        return res.status(200).send(users);
+      } else {
+        throw new applicationError.UserNotFoundError();
+      }
     })
     .catch(e => {
-      console.log(e);
+      res.status(e.status).send(e);
     });
 }
 

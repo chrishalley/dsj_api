@@ -166,11 +166,35 @@ describe('POST /users', () => {
 
 //GET /users/:id
 describe('GET /users/:id', () => {
-  it('should return a user object', done => {
+
+  it('should return a 401 for unauthenticated users', (done) => {
+    const user = users[0];
+
+    request(app)
+      .get(`/users/${user._id}`)
+      .expect(401)
+      .end(done);
+  })
+
+  it('should return a user object for an admin account', done => {
     var user = users[0];
 
     request(app)
       .get(`/users/${user._id}`)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.email).toEqual(user.email);
+      })
+      .end(done);
+  });
+  
+  it('should return a user object for a super-admin account', done => {
+    var user = users[0];
+
+    request(app)
+      .get(`/users/${user._id}`)
+      .set('Authorization', 'Bearer ' + superAdminToken)
       .expect(200)
       .expect(res => {
         expect(res.body.email).toEqual(user.email);
@@ -185,6 +209,7 @@ describe('GET /users/:id', () => {
 
     request(app)
       .get(`/users/${userID}`)
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(404)
       .expect(res => {
         expect(res.body.message).toBe(error.message);
@@ -200,6 +225,7 @@ describe('GET /users/:id', () => {
 
     request(app)
       .get(`/users/${userID}`)
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(400)
       .expect(res => {
         expect(res.body.message).toBe(error.message);
@@ -209,7 +235,7 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe.only('DELETE /users/:id', () => {
+describe('DELETE /users/:id', () => {
   it('should delete a user by id', (done) => {
     const user =  users[0];
     
