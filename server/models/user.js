@@ -157,13 +157,13 @@ UserSchema.methods.generateAuthToken = function() {
     return cur.access !== access;
   });
   user.tokens = user.tokens.concat([{access, token}]);
-  return user.save()
-    .then(res => {
+  return User.updateOne({_id: user._id}, {tokens: user.tokens})
+    .then(() => {
       return user;
     })
     .catch(e => {
-      reject(new applicationError.GeneralError('user.generateAuthToken() failed'));
-    });
+      throw e;
+    })
 };
 
 UserSchema.methods.clearToken = function(token) {

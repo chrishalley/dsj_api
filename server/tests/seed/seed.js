@@ -15,7 +15,8 @@ const users = [
     firstName: 'Dave',
     lastName: 'Daveson',
     email: 'dave@daveson.com',
-    password: 'password'
+    password: 'password',
+    role: 'admin'
   },
   {
     _id: new ObjectID(),
@@ -30,26 +31,21 @@ const users = [
 
 const populateUsers = (done) => {
   User.deleteMany({})
-  .then(() => {
-    var userOne = new User(users[0]).save();
-    var userTwo = new User(users[1]).save();
-    var userThree = new User(users[2]).save();
+    .then(() => {
+      var userOne = new User(users[0]).save();
+      var userTwo = new User(users[1]).save();
+      var userThree = new User(users[2]).save();
 
-    return Promise.all([userOne, userTwo, userThree]);
-  })
-  .then(users => {
-    // console.log('users', users);
-    return users[0].generateAuthToken()
-      .then(token => {
-        return token;
+      return Promise.all([userOne, userTwo, userThree]);
+    })
+    .then(users => {
+      users.forEach(user => {
+        user.generateAuthToken();
       })
-      .catch(e => {
-        console.log(e)
-      })
-  })
-    .then(() => done())
+      done();
+    })
     .catch(e => {
-      console.log(e)
+      console.log(e);
     });
 }
 

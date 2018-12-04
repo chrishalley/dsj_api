@@ -7,11 +7,37 @@ const User = require('./../models/user');
 const {populateUsers, users} = require('./seed/seed');
 const applicationError = require('../errors/applicationErrors');
 
-beforeEach(populateUsers);
+let superAdminToken;
+let adminToken;
+
+before(populateUsers);
+before(done => {
+  User.find({role: 'super-admin'})
+    .then(users => {
+      // console.log(users[0].tokens[0].token);
+      superAdminToken = users[0].tokens[0].token;
+      done();
+    })
+    .catch(e => {
+      console.log(e);
+    });
+});
+before(done => {
+  User.find({role: 'admin'})
+    .then(users => {
+      // console.log(users[0].tokens[0].token);
+      adminToken = users[0].tokens[0].token;
+      done();
+    })
+    .catch(e => {
+      console.log(e);
+    });
+});
+
 
 describe('POST /users', () => {
 
-  it('should add a user with default role of "admin"', function(done) {
+  it('should allow a super-admin to add a user with default role of "admin"', function(done) {
     this.timeout(8000);
 
     const user = {
@@ -19,16 +45,18 @@ describe('POST /users', () => {
       lastName: 'Kellyson',
       email: 'kelly@kellyson.com'
     };
-    
+
     request(app)
       .post('/users')
       .send(user)
-      .expect(200)
+      .set('Authorization', 'Bearer ' + superAdminToken)
+      .expect(201)
       .expect((res) => {
         expect(res.body).toMatchObject(user);
         expect(res.body.role).toBe('admin');
       })
       .end(done)
+    
   });
 
   it('should not add a user with email address that already exists', (done) => {
@@ -41,6 +69,7 @@ describe('POST /users', () => {
     request(app)
       .post('/users')
       .send(user)
+      .set('Authorization', 'Bearer ' + superAdminToken)
       .expect(500)
       .expect(res => {
         expect(res.body.code).toBe(11000)
@@ -59,7 +88,8 @@ describe('POST /users', () => {
     request(app)
       .post('/users')
       .send(user)
-      .expect(200)
+      .set('Authorization', 'Bearer ' + superAdminToken)
+      .expect(201)
       .expect(res => {
         expect(res.body).toMatchObject(user)
         expect(res.body.role).toBe('super-admin')
@@ -83,10 +113,12 @@ describe('POST /users', () => {
     userOne = request(app)
       .post('/users')
       .send(userOne)
+      .set('Authorization', 'Bearer ' + superAdminToken)
     
     userTwo = request(app)
       .post('/users')
       .send(userTwo)
+      .set('Authorization', 'Bearer ' + superAdminToken)
 
     Promise.all([userOne, userTwo])
       .then(res => {
@@ -116,8 +148,20 @@ describe('POST /users', () => {
   });
 
   it('should not allow an admin to add a new user', (done) => {
-    
-  })
+
+    const user = {
+      firstName: 'Kelly',
+      lastName: 'Kellyson',
+      email: 'kelly@kellyson.com'
+    };
+
+    request(app)
+        .post('/users')
+        .send(user)
+        .set('Authorization', 'Bearer ' + adminToken)
+        .expect(401)
+        .end(done);
+  });
 });
 
 //GET /users/:id
@@ -337,8 +381,8 @@ describe('POST /auth/login', () => {
       .end(done);
   });
 
-  it('should return a 200 for an  existing user', (done) => {
-    const  user = users[1];
+  it('should return a 200 for an existing user', (done) => {
+    const user = users[1];
 
     request(app)
       .post('/auth/login')

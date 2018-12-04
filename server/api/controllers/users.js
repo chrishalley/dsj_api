@@ -49,7 +49,7 @@ exports.users_save_new_user = (req, res, next) => {
     return Promise.all([userProm, mailProm])
       .then(([user, mail]) => {
         console.log('email sent');
-        res.status(200).send(user);
+        res.status(201).send(user);
       })
       .catch(e => {
         console.log(e);
@@ -58,7 +58,7 @@ exports.users_save_new_user = (req, res, next) => {
     } else {
       newUser.save()
       .then((user) => {
-        res.status(200).send(user)
+        res.status(201).send(user)
       })
       .catch(e => {
         res.status(e.status ? e.status : 500).send(e);  

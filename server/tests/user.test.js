@@ -29,7 +29,7 @@ describe('user.generateAuthToken', () => {
       .then(decoded => {
         expect(decoded).toMatchObject({
           id: user._id.toHexString(),
-          access: 'auth'
+          access: user.role
         });
         done();
       })
@@ -63,7 +63,7 @@ describe('user.generateAuthToken', () => {
         expect(user.tokens).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              access: 'auth'
+              access: user.role
             })
           ])
         );
