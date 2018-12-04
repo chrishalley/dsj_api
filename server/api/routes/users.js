@@ -17,7 +17,7 @@ router.post('/', checkAuth, checkSuperAdmin, UsersController.users_save_new_user
 router.get('/:id', checkAuth, UsersController.users_get_single_user);
 
 // DELETE USER
-router.delete('/:id', UsersController.users_delete_user);
+router.delete('/:id', checkAuth, checkSuperAdmin, UsersController.users_delete_user);
 
 // UPDATING USERS
 router.put('/:id', UsersController.users_edit_user);

@@ -109,7 +109,7 @@ exports.users_delete_user = (req, res) => {
         return User.find({role: 'super-admin'})
           .then(users => {
             if (users.length < 2) {
-              throw new applicationError.GeneralError('Cannot delete only remaining super-admin', 403);
+              throw new applicationError.GeneralError('Cannot delete only remaining super-admin', 409);
             } else {
               return user
             }

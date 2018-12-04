@@ -235,13 +235,33 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe('DELETE /users/:id', () => {
-  it('should delete a user by id', (done) => {
+describe.only('DELETE /users/:id', () => {
+
+  it('should return a 401 for an unauthenticated user', (done) => {
     const user =  users[0];
     
     request(app)
       .delete(`/users/${user._id}`)
-      .send({})
+      .expect(401)
+      .end(done);
+  })
+  
+  it('should return a 401 for an admin user', (done) => {
+    const user =  users[0];
+    
+    request(app)
+      .delete(`/users/${user._id}`)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .expect(401)
+      .end(done);
+  })
+
+  it('should allow a super-admin to delete a user by id', (done) => {
+    const user =  users[0];
+    
+    request(app)
+      .delete(`/users/${user._id}`)
+      .set('Authorization', 'Bearer ' + superAdminToken)
       .expect(200)
       .expect((res) => {
         expect(res.body._id.toString()).toEqual(user._id.toString());
@@ -254,7 +274,7 @@ describe('DELETE /users/:id', () => {
         .expect(users => {
           expect(users).not.toContain(user);
         })
-        .end(done)
+        done();
       });
   });
 
@@ -265,8 +285,9 @@ describe('DELETE /users/:id', () => {
     
     request(app)
       .delete(`/users/${userID}`)
+      .set('Authorization', 'Bearer ' + superAdminToken)
       .expect(error.status)
-      .expect((res) => {
+      .expect(res => {
         expect(res.body.message).toEqual(error.message);
       })
       .end(done)
@@ -279,6 +300,7 @@ describe('DELETE /users/:id', () => {
     
     request(app)
       .delete(`/users/${userID}`)
+      .set('Authorization', 'Bearer ' + superAdminToken)
       .expect(error.status)
       .expect((res) => {
         expect(res.body.message).toEqual(error.message);
@@ -291,7 +313,8 @@ describe('DELETE /users/:id', () => {
 
     request(app)
       .delete(`/users/${user._id}`)
-      .expect(403)
+      .set('Authorization', 'Bearer ' + superAdminToken)
+      .expect(409)
       .end(() => {
         User.find({role: 'super-admin'})
           .then(users => {
@@ -319,6 +342,7 @@ describe('DELETE /users/:id', () => {
       .then(() => {
         request(app)
         .delete(`/users/${superOne._id}`)
+        .set('Authorization', 'Bearer ' + superAdminToken)
         .expect(200)
         .end(() => {
           User.find({role: 'super-admin'})
