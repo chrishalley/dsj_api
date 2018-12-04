@@ -145,13 +145,14 @@ UserSchema.methods.checkPassword = function(password) {
 
 UserSchema.methods.generateAuthToken = function() {
   const user = this;
-  const access = 'auth';
+  const access = this.role;
   const payload = {
     id: user._id.toHexString(),
-    access: access,
-    expiresAt: new Date().getTime() + (3600 * 1000)
+    access: access
   };
-  const token = jwt.sign(payload, process.env.JWT_SECRET).toString();
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: '1h'
+  }).toString();
   user.tokens = user.tokens.filter(cur => {
     return cur.access !== access;
   });

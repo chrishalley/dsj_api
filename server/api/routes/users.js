@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const generatePassword = require('generate-password');
-const emails = require('../../mail/emails');
-const mongoose = require('mongoose');
-const applicationError = require('../../errors/applicationErrors');
-const utils = require('../../utils/utils');
-const jwt = require('jsonwebtoken');
+const checkAuth = require('../../middleware/check-auth');
+const checkSuperAdmin = require('../../middleware/check-super-admin');
 
 const UsersController = require('../controllers/users');
 
@@ -15,7 +11,7 @@ const {User} = require('../../models/user');
 router.get('/', UsersController.users_get_users_list);
 
 // SAVE NEW USER
-router.post('/', UsersController.users_save_new_user);
+router.post('/', checkAuth, checkSuperAdmin, UsersController.users_save_new_user);
 
 // GET USER INFO
 router.get('/:id', UsersController.users_get_single_user);

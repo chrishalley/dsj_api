@@ -114,6 +114,10 @@ describe('POST /users', () => {
       });
 
   });
+
+  it('should not allow an admin to add a new user', (done) => {
+    
+  })
 });
 
 //GET /users/:id

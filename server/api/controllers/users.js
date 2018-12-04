@@ -48,7 +48,8 @@ exports.users_save_new_user = (req, res, next) => {
     })
     return Promise.all([userProm, mailProm])
       .then(([user, mail]) => {
-        res.status(200).send(user)
+        console.log('email sent');
+        res.status(200).send(user);
       })
       .catch(e => {
         console.log(e);
@@ -273,9 +274,12 @@ exports.users_verify_reset_token = (req, res) => {
 
 exports.users_reset_password_by_id = (req, res) => {
   const id = req.params.id;
-  const newPassword = req.body.newPassword
+  const newPassword = req.body.newPassword;
   User.findById(id)
     .then(user => {
+      if (!user) {
+        throw new applicationError.UserNotFoundError();
+      }
       return user.setPassword(newPassword)
     })
     .then(user => {
