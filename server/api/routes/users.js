@@ -8,7 +8,7 @@ const UsersController = require('../controllers/users');
 const {User} = require('../../models/user');
 
 // GET USERS LIST
-router.get('/', UsersController.users_get_users_list);
+router.get('/', checkAuth, UsersController.users_get_users_list);
 
 // SAVE NEW USER
 router.post('/', checkAuth, checkSuperAdmin, UsersController.users_save_new_user);

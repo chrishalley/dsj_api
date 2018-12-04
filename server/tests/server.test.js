@@ -209,7 +209,7 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe('DELETE /users/:id', () => {
+describe.only('DELETE /users/:id', () => {
   it('should delete a user by id', (done) => {
     const user =  users[0];
     
@@ -223,6 +223,7 @@ describe('DELETE /users/:id', () => {
       .end(() => {
         request(app)
         .get('/users')
+        .set('Authorization', 'Bearer ' + adminToken)
         .expect(200)
         .expect(users => {
           expect(users).not.toContain(user);
@@ -353,12 +354,11 @@ describe('GET /users', () => {
   it('should return a 200 and array of users', done => {
     request(app)
       .get('/users')
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(200)
-      // .expect(res => {
-      //   const data = res.body;
-      //   console.log(typeof data);
-      //   expect(typeof data).toBe('array');
-      //   })
+      .expect(res => {
+        expect(res.body.length).toBeGreaterThan(0);
+      })
       .end(done);
   });
 });
