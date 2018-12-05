@@ -16,7 +16,7 @@ exports.users_get_users_list = (req, res, next) => {
       }
     })
     .catch(e => {
-      res.status(e.status).send(e);
+      return next(e);
     });
 }
 
@@ -52,12 +52,10 @@ exports.users_save_new_user = (req, res, next) => {
     })
     return Promise.all([userProm, mailProm])
       .then(([user, mail]) => {
-        console.log('email sent');
         res.status(201).send(user);
       })
       .catch(e => {
-        console.log(e);
-        res.status(e.status ? e.status : 500).send(e);
+        return next(e);
       })
     } else {
       newUser.save()
@@ -65,17 +63,17 @@ exports.users_save_new_user = (req, res, next) => {
         res.status(201).send(user)
       })
       .catch(e => {
-        res.status(e.status ? e.status : 500).send(e);  
+        return next(e); 
       })
     }
 };
 
-exports.users_get_single_user = (req, res) => {
+exports.users_get_single_user = (req, res, next) => {
   const validID = mongoose.Types.ObjectId.isValid(req.params.id);
   
   if (!validID) {
     const error = new applicationError.InvalidUserID();
-    return res.status(error.status).send(error);
+    return next(error);
   }
 
   User.findById(req.params.id)
@@ -86,17 +84,16 @@ exports.users_get_single_user = (req, res) => {
       res.status(200).send(user);
     })
     .catch(e => {
-      // console.log(e);
-      res.status(e.status).send(e);
+      return next(e);
     })
 };
 
-exports.users_delete_user = (req, res) => {
+exports.users_delete_user = (req, res, next) => {
   const id = req.params.id;
   
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new applicationError.InvalidUserID();
-    return res.status(error.status).send(error);
+    return next(error);
   }
 
   // Check role of user
@@ -131,22 +128,16 @@ exports.users_delete_user = (req, res) => {
         })
     }) 
     .catch(e => {
-      return res.status(e.status).send(e);
+      return next(e);
     });
 };
 
-exports.users_edit_user = (req, res) => {
-  const userData = req.userData;
-  if (userData) {
-
-  } else {
-    throw new applicationError.GeneralError();
-  }
+exports.users_edit_user = (req, res, next) => {
   const id = req.params.id;
   const update = req.body;
   if (!update || utils.isEmptyObject(update)) {
     const error = new applicationError.InvalidRequest();
-    return res.status(error.status).send(error);
+    return next(error);
   } else {
   User.findUserById(id)
     .then(user => {
@@ -161,12 +152,12 @@ exports.users_edit_user = (req, res) => {
       res.status(200).send(user);
     })
     .catch(e => {
-      res.status(500).send(e);
-    })
+      return next(e);
+    });
   }
 };
 
-exports.users_set_password = (req, res) => {
+exports.users_set_password = (req, res, next) => {
 
   const currentPassword = req.body.currentPassword;
   const newPassword = req.body.newPassword;
@@ -198,20 +189,19 @@ exports.users_set_password = (req, res) => {
         })
     })
     .catch(e => {
-      res.status(e.status || 500).send(e.message);
+      return next(e);
     });
 };
 
-exports.users_reset_password = (req, res) => {
+exports.users_reset_password = (req, res, next) => {
   const email = req.body.email;
-  console.log('Email: ', email);
   
   // Validate email string
   const validEmail = utils.validateEmail(email);
   
   if(!validEmail) {
     const error = new applicationError.InvalidRequest();
-    return res.status(error.status).send(error);
+    return next(error);
   }
 
   if (process.env.NODE_ENV !== 'test') {
@@ -240,8 +230,7 @@ exports.users_reset_password = (req, res) => {
         res.status(200).send(user)
       })
       .catch(e => {
-        console.log(e);
-        res.status(e.status ? e.status : 500).send(e);
+        return next(e);
       })
     
   } else {
@@ -250,28 +239,25 @@ exports.users_reset_password = (req, res) => {
         res.status(200).send(user);
       })
       .catch(e => {
-        res.status(e.status).send(e);
+        return next(e);
       })
   }
 };
 
-exports.users_verify_reset_token = (req, res) => {
+exports.users_verify_reset_token = (req, res, next) => {
   const id = req.body._id;
   const token = req.body.token;
 
   const validID = mongoose.Types.ObjectId.isValid(id);
   
   if (!validID) {
-    console.log('Invalid ID');
     const error = new applicationError.InvalidUserID();
-    console.log(error)
-    return res.status(error.status).json(error);
+    return next(error);
   }
 
   return User.findById(id)
     .then(user => {
       if (!user) {
-        console.log('ERROR: No user found!')
         throw new applicationError.UserNotFoundError();
       }
       let decoded
@@ -280,23 +266,22 @@ exports.users_verify_reset_token = (req, res) => {
         if (decoded._id.toString() !== user._id.toString()) {
           throw new applicationError.TokenExpired();
         }
-        return res.status(200).send('TRue')
+        return res.status(200).send()
       } catch(e) {
-        res.status(403).send('Token Invalid')
+        throw e;
       }
     })
     .catch(error => {
-      console.log(error)
-      return res.status(error.status).send(error);
+      return next(error);
     }) 
 };
 
-exports.users_reset_password_by_id = (req, res) => {
+exports.users_reset_password_by_id = (req, res, next) => {
   const id = req.params.id;
 
   if (mongoose.Types.ObjectId.isValid(id) !== true) {
     const error = new applicationError.InvalidUserID();
-    return res.status(error.status).send(error)
+    return next(error);
   } 
 
   const newPassword = req.body.newPassword;
@@ -311,7 +296,6 @@ exports.users_reset_password_by_id = (req, res) => {
       res.status(200).send('Password successfully reset')
     })
     .catch(e => {
-      console.log(e)
-      res.status(e.status).send(e.message)
+      return next(e);
     });
 };

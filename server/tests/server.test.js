@@ -434,9 +434,6 @@ describe('PATCH /users/:id', () => {
       })
       .set('Authorization', 'Bearer ' + superAdminToken)
       .expect(200)
-      .expect(res => {
-        console.log(res.body)
-      })
       .end(done);
   });
 
@@ -451,9 +448,6 @@ describe('PATCH /users/:id', () => {
           })
           .set('Authorization', 'Bearer ' + user.tokens[0].token)
           .expect(200)
-          .expect(res => {
-            console.log(res.body)
-          })
           .end(done);
       })
       .catch(e => done(e));
@@ -667,6 +661,8 @@ describe('POST /users/:id/set-password', () => {
     var user = users[0];
     var url = '/users/' + user._id + '/set-password';
 
+    const err = new applicationError.PasswordIncorrectError();
+
     User.findById(user._id)
       .then(user => {
         request(app)
@@ -679,7 +675,7 @@ describe('POST /users/:id/set-password', () => {
           .expect(400)
           .expect(res => {
             expect(typeof res).toBe('object');
-            expect(res.error.text).toEqual('Password incorrect');
+            expect(res.body.message).toEqual(err.message);
           })
           .end(done);
       })
@@ -690,9 +686,10 @@ describe('POST /users/:id/set-password', () => {
     var user = users[2];
     var url = '/users/' + user._id + 'j/set-password';
 
+    const err = new applicationError.InvalidUserID();
+
     User.findById(user._id)
       .then(user => {
-        console.log(user);
         request(app)
           .post(url)
           .send({
@@ -703,7 +700,7 @@ describe('POST /users/:id/set-password', () => {
           .expect(400)
           .expect(res => {
             expect(typeof res).toBe('object');
-            expect(res.error.text).toEqual('Invalid user ID');
+            expect(res.body.message).toEqual(err.message);
           })
           .end(done);
       })

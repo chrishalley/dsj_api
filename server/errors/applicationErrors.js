@@ -39,7 +39,7 @@ class InvalidRequest extends ApplicationError {
 
 class GeneralError extends ApplicationError {
   constructor(message, status) {
-    super(message || 'An error has occurred', status || 520);
+    super(message || 'An error has occurred', status || 500);
   }
 }
 

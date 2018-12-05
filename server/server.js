@@ -75,10 +75,17 @@ app.use((req, res, next) => {
 })
 
 app.use((error, req, res, next) => {
+  let err = new applicationError.GeneralError();
   if (error instanceof applicationError.ApplicationError) {
+    // console.log('applicationError: ', error);
     res.status(error.status).send(error);
+  } else if (error.name === "MongoError") {
+    // console.log('MongoError: ', error);
+    err.message = error.errmsg;
+    err.code = error.code;
+    res.status(err.status).send(err);
   } else {
-    console.log('ERROR***: ', error);
+    // console.log('ERROR***: ', JSON.stringify(error, null, 2));
     const customError = new applicationError.GeneralError();
     res.status(error.status).send(error);
   }
