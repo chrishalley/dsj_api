@@ -235,7 +235,7 @@ describe('GET /users/:id', () => {
 });
 
 // DELETE /users/:id
-describe.only('DELETE /users/:id', () => {
+describe('DELETE /users/:id', () => {
 
   it('should return a 401 for an unauthenticated user', (done) => {
     const user =  users[0];
@@ -363,40 +363,120 @@ describe.only('DELETE /users/:id', () => {
 
 });
 
-describe('PUT /users/:id', () => {
-  it('should set a user\'s status to approved', (done) => {
-
-    var user = users[0];
-    var url = '/users/' + user._id;
+describe('PATCH /users/:id', () => {
+  
+  it('should return a 401 for unauthenticated users', (done) => {
+    const user = users[0];
 
     request(app)
-      .put(url)
+      .patch(`/users/${user._id}`)
       .send({
-        status: 'approved'
+        role: 'somethingRandom'
       })
-      .expect(200)
-      .expect(res => {
-
-        expect(typeof res.body).toBe('object');
-      })
+      .expect(401)
       .end(done);
   });
 
   it('should return 400 error on empty object', (done) => {
-    var user = users[0];
+    var user = users[2];
     var url = `/users/${user._id}`;
     var error = new applicationError.InvalidRequest();
     
     request(app)
-    .put(url)
-    .send({})
-    .expect(400)
-    .expect(res => {
-      
-      expect(res.body.message).toEqual(error.message);
+      .patch(url)
+      .send({})
+      .set('Authorization', 'Bearer ' + superAdminToken)
+      .expect(400)
+      .expect(res => {
+        expect(res.body.message).toEqual(error.message);
       })
       .end(done);
   })
+  
+  it('should return 403 error for an admin editing another admin\'s details', (done) => {
+    let adminOne;
+    let adminTwo;
+
+    User.find({email: users[0].email})
+        .then(users => {
+          return adminOne = users[0];
+        })
+        .then(() => {
+          return User.find({email: users[1].email})
+            .then(users => {
+              return adminTwo = users[0];
+            })
+        })
+        .then(() => {
+          // console.log('adminOne: ', adminOne);
+          // console.log('adminTwo: ', adminTwo);
+        })
+        .then(() => {
+          request(app)
+            .patch(`/users/${adminOne._id}`)
+            .send({email: 'newEmail@email.com'})
+            .set('Authorization', 'Bearer ' + adminTwo.tokens[0].token)
+            .expect(403)
+            .end(done);
+        })
+        .catch(e => {
+          done(e);
+        });
+  });
+
+  it('should allow a super-admin to edit an admin\'s info', (done) => {
+    const user = users[0];
+
+    request(app)
+      .patch(`/users/${user._id}`)
+      .send({
+        email: 'test@test.com'
+      })
+      .set('Authorization', 'Bearer ' + superAdminToken)
+      .expect(200)
+      .expect(res => {
+        console.log(res.body)
+      })
+      .end(done);
+  });
+
+  it('should allow a super-admin to edit their own info', (done) => {
+    const user = users[2];
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .patch(`/users/${user._id}`)
+          .send({
+            email: 'test@test.com'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .expect(res => {
+            console.log(res.body)
+          })
+          .end(done);
+      })
+      .catch(e => done(e));
+  });
+
+  it('should allow an admin to edit their own info', (done) => {
+    const user = users[0];
+    const newEmail = 'newEmail@email.com'
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .patch(`/users/${user._id}`)
+          .send({
+            email: newEmail
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.email).toEqual(newEmail);
+          })
+          .end(done);
+      })
+  });
 });
 
 // GET /users
@@ -468,7 +548,122 @@ describe('POST /auth/login', () => {
 
 describe('POST /users/:id/set-password', () => {
 
-  it('should return an error for a request with wrong current password', (done) => {
+  it.only('allow an admin to set their own password', function(done) {
+    this.timeout(8000);
+
+    const userOne = users[0];
+    const newPassword = 'newPassword';
+    
+    User.findById(userOne._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${user._id}/resetPassword`)
+          .send({
+            newPassword: newPassword
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .end(() => {
+            User.findById(user._id)
+              .then(user => {
+                const newerPassword = 'evenNewerPassword';
+                request(app)
+                  .post(`/users/${user._id}/set-password`)
+                  .send({
+                    currentPassword: newPassword,
+                    newPassword: newerPassword
+                  })
+                  .set('Authorization', 'Bearer ' + user.tokens[0].token)
+                  .expect(200)
+                  .end(done)
+              })
+              .catch(e => done(e));
+          });
+      })
+      .catch(e => {
+        done(e);
+      });
+  });
+
+  it.only('should allow a super-admin to set an admin\'s password', function(done) {
+    this.timeout(8000);
+
+    const admin = users[0];
+    const superAdmin = users[2];
+    const newPassword = 'newPassword';
+    
+    User.findById(admin._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${user._id}/resetPassword`)
+          .send({
+            newPassword: newPassword
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .end(() => {
+            User.findById(superAdmin._id)
+              .then(user => {
+                const newerPassword = 'evenNewerPassword';
+                request(app)
+                  .post(`/users/${admin._id}/set-password`)
+                  .send({
+                    currentPassword: newPassword,
+                    newPassword: newerPassword
+                  })
+                  .set('Authorization', 'Bearer ' + user.tokens[0].token)
+                  .expect(200)
+                  .end(done)
+              })
+              .catch(e => done(e));
+          });
+      })
+      .catch(e => {
+        done(e);
+      });
+    
+  });
+
+  it.only('should not allow an admin to set another admin\'s password', function(done) {
+    this.timeout(8000);
+
+    const adminOne = users[0];
+    const adminTwo = users[1];
+    const newPassword = 'newPassword';
+    
+    User.findById(adminOne._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${user._id}/resetPassword`)
+          .send({
+            newPassword: newPassword
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .end(() => {
+            User.findById(adminTwo._id)
+              .then(user => {
+                const newerPassword = 'evenNewerPassword';
+                request(app)
+                  .post(`/users/${adminOne._id}/set-password`)
+                  .send({
+                    currentPassword: newPassword,
+                    newPassword: newerPassword
+                  })
+                  .set('Authorization', 'Bearer ' + user.tokens[0].token)
+                  .expect(403)
+                  .end(done)
+              })
+              .catch(e => done(e));
+          });
+      })
+      .catch(e => {
+        done(e);
+      });
+    
+  });
+
+  it('should return an error for an authenticated request with wrong current password', (done) => {
     var user = users[0];
     var url = '/users/' + user._id + '/set-password';
     
@@ -486,7 +681,7 @@ describe('POST /users/:id/set-password', () => {
       .end(done);
   });
 
-  it('should return an error for an invalid id', (done) => {
+  it('should return an error for an authenticated request with invalid id', (done) => {
     var user = users[0];
     var url = '/users/' + user._id + 'j/set-password';
 
@@ -505,21 +700,9 @@ describe('POST /users/:id/set-password', () => {
   });
 
   it('should return user object for a valid request', (done) => {
-    var user = users[0];
-    var url = '/users/' + user._id + '/set-password';
-
-    request(app)
-      .post(url)
-      .send({
-        currentPassword: 'password',
-        newPassword: 'password123'
-      })
-      .expect(200)
-      .expect(res => {
-        expect(res.body.password).not.toBe(user.password);
-      })
-      .end(done);
+  
   });
+
 });
 
 describe('POST /users/reset-password', () => {
@@ -539,37 +722,127 @@ describe('POST /users/reset-password', () => {
 });
 
 describe('POST /users/:id/resetPassword', () => {
-  it('should change a users password', function(done) {
-    this.timeout(8000);
 
+  it('should return a 400 for invalid user IDs', (done) => {
     const user = users[0];
-    oldPassword = user.password;
-    newPassword = 'aNewPassword';
+
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${user._id}aaa/resetPassword`)
+          .send({
+            newPassword: 'newPassword'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(400)
+          .end(done);
+      })
+
+  })
+
+  it('should return a 401 for unauthenticated requests', (done) => {
+    const user = users[0];
 
     request(app)
       .post(`/users/${user._id}/resetPassword`)
-      .send({newPassword})
-      .expect(200)
-      .end(() => {
-        User.findById(user._id)
-          .then(user => {
-            return new Promise((resolve, reject) => {
-              bcrypt.compare(oldPassword, user.password, function(err, res) {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve(res);
-                }
-              });
-            });
-        })
-        .then(res => {
-          expect(res).toBe(false);
-          done();
-        })
-        .catch(e => {
-          done(e);
-        })
+      .expect(401)
+      .end(done);
+  });
+
+  it('should allow an admin to change their own password', (done) => {
+    const user = users[0];
+
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${user._id}/resetPassword`)
+          .send({
+            newPassword: 'potatoes'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .end(done)
+      })
+      .catch(e => {
+        done(e);
       })
   })
-})
+  
+  it('should not allow an admin to change another admin\'s password', (done) => {
+    const user = users[0];
+    const userTwo = users[1];
+
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${userTwo._id}/resetPassword`)
+          .send({
+            newPassword: 'potatoes'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(403)
+          .end(done)
+      })
+      .catch(e => {
+        done(e);
+      })
+  })
+
+  it('should allow a super-admin to change another admin\'s password', (done) => {
+    const user = users[2];
+    const userTwo = users[1];
+
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .post(`/users/${userTwo._id}/resetPassword`)
+          .send({
+            newPassword: 'potatoes'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .end(done)
+      })
+      .catch(e => {
+        done(e);
+      })
+  })
+
+  it('should result in the new password being not equal to the old password', function(done) {
+    this.timeout(8000);
+    const user = users[2];
+
+    User.findById(user._id)
+      .then(user => {
+        const oldPassword = user.password;
+        const newPassword = 'aNewPassword';
+
+        request(app)
+          .post(`/users/${user._id}/resetPassword`)
+          .send({newPassword})
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(200)
+          .end(() => {
+            User.findById(user._id)
+              .then(user => {
+                return new Promise((resolve, reject) => {
+                  bcrypt.compare(oldPassword, user.password, function(err, res) {
+                    if (err) {
+                      reject(err);
+                    } else {
+                      resolve(res);
+                    }
+                  });
+                });
+            })
+            .then(res => {
+              expect(res).toBe(false);
+              done();
+            })
+            .catch(e => {
+              done(e);
+            });
+          });
+      });
+  });
+});

@@ -136,6 +136,12 @@ exports.users_delete_user = (req, res) => {
 };
 
 exports.users_edit_user = (req, res) => {
+  const userData = req.userData;
+  if (userData) {
+
+  } else {
+    throw new applicationError.GeneralError();
+  }
   const id = req.params.id;
   const update = req.body;
   if (!update || utils.isEmptyObject(update)) {
@@ -278,6 +284,12 @@ exports.users_verify_reset_token = (req, res) => {
 
 exports.users_reset_password_by_id = (req, res) => {
   const id = req.params.id;
+
+  if (mongoose.Types.ObjectId.isValid(id) !== true) {
+    const error = new applicationError.InvalidUserID();
+    return res.status(error.status).send(error)
+  } 
+
   const newPassword = req.body.newPassword;
   User.findById(id)
     .then(user => {
