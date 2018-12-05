@@ -204,6 +204,15 @@ exports.users_set_password = (req, res) => {
 
 exports.users_reset_password = (req, res) => {
   const email = req.body.email;
+  console.log('Email: ', email);
+  
+  // Validate email string
+  const validEmail = utils.validateEmail(email);
+  
+  if(!validEmail) {
+    const error = new applicationError.InvalidRequest();
+    return res.status(error.status).send(error);
+  }
 
   if (process.env.NODE_ENV !== 'test') {
     const UserProm = User.findByEmail(email)

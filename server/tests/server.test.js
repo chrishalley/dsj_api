@@ -548,7 +548,7 @@ describe('POST /auth/login', () => {
 
 describe('POST /users/:id/set-password', () => {
 
-  it.only('allow an admin to set their own password', function(done) {
+  it('allow an admin to set their own password', function(done) {
     this.timeout(8000);
 
     const userOne = users[0];
@@ -585,7 +585,7 @@ describe('POST /users/:id/set-password', () => {
       });
   });
 
-  it.only('should allow a super-admin to set an admin\'s password', function(done) {
+  it('should allow a super-admin to set an admin\'s password', function(done) {
     this.timeout(8000);
 
     const admin = users[0];
@@ -624,7 +624,7 @@ describe('POST /users/:id/set-password', () => {
     
   });
 
-  it.only('should not allow an admin to set another admin\'s password', function(done) {
+  it('should not allow an admin to set another admin\'s password', function(done) {
     this.timeout(8000);
 
     const adminOne = users[0];
@@ -666,52 +666,85 @@ describe('POST /users/:id/set-password', () => {
   it('should return an error for an authenticated request with wrong current password', (done) => {
     var user = users[0];
     var url = '/users/' + user._id + '/set-password';
+
+    User.findById(user._id)
+      .then(user => {
+        request(app)
+          .post(url)
+          .send({
+            currentPassword: 'pasword',
+            newPassword: 'password123'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(400)
+          .expect(res => {
+            expect(typeof res).toBe('object');
+            expect(res.error.text).toEqual('Password incorrect');
+          })
+          .end(done);
+      })
     
-    request(app)
-      .post(url)
-      .send({
-        currentPassword: 'pasword',
-        newPassword: 'password123'
-      })
-      .expect(400)
-      .expect(res => {
-        expect(typeof res).toBe('object');
-        expect(res.error.text).toEqual('Password incorrect');
-      })
-      .end(done);
   });
 
   it('should return an error for an authenticated request with invalid id', (done) => {
-    var user = users[0];
+    var user = users[2];
     var url = '/users/' + user._id + 'j/set-password';
 
-    request(app)
-      .post(url)
-      .send({
-        currentPassword: 'password',
-        newPassword: 'password123'
+    User.findById(user._id)
+      .then(user => {
+        console.log(user);
+        request(app)
+          .post(url)
+          .send({
+            currentPassword: 'password',
+            newPassword: 'password123'
+          })
+          .set('Authorization', 'Bearer ' + user.tokens[0].token)
+          .expect(400)
+          .expect(res => {
+            expect(typeof res).toBe('object');
+            expect(res.error.text).toEqual('Invalid user ID');
+          })
+          .end(done);
       })
-      .expect(400)
-      .expect(res => {
-        expect(typeof res).toBe('object');
-        expect(res.error.text).toEqual('Invalid user ID');
-      })
-      .end(done);
-  });
 
-  it('should return user object for a valid request', (done) => {
-  
   });
 
 });
 
 describe('POST /users/reset-password', () => {
-  it('should receive an email', (done) => {
+
+  it('should return a 404 error for an email not belonging to a user', (done) => {
+    const email = 'nonexistant@email.com';
+
+    request(app)
+      .post('/users/reset-password')
+      .send({
+        email: email
+      })
+      .expect(404)
+      .end(done);
+  });
+
+  it('should return an error for an invalid email', (done) => {
+    const invalidEmail = 'invalidEmail';
+
+    request(app)
+      .post('/users/reset-password')
+      .send({
+        email: invalidEmail
+      })
+      .expect(400)
+      .end(done);
+  });
+
+  it('should result in 200 for email belonging to user in DB', (done) => {
     const email = users[0].email;
 
     request(app)
       .post('/users/reset-password')
       .send({email: email})
+      .expect(200)
       .expect((res) => {
         expect(res.body).toMatchObject({
           email: email
@@ -722,23 +755,6 @@ describe('POST /users/reset-password', () => {
 });
 
 describe('POST /users/:id/resetPassword', () => {
-
-  it('should return a 400 for invalid user IDs', (done) => {
-    const user = users[0];
-
-    User.findById(user._id)
-      .then(user => {
-        request(app)
-          .post(`/users/${user._id}aaa/resetPassword`)
-          .send({
-            newPassword: 'newPassword'
-          })
-          .set('Authorization', 'Bearer ' + user.tokens[0].token)
-          .expect(400)
-          .end(done);
-      })
-
-  })
 
   it('should return a 401 for unauthenticated requests', (done) => {
     const user = users[0];
