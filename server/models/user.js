@@ -49,7 +49,7 @@ UserSchema.methods.toJSON = function() {
   var obj = this.toObject();
   delete obj.password;
   return obj;
- }
+}
 
 UserSchema.statics.findByEmail = function(email) {
   var User = this;
@@ -61,7 +61,7 @@ UserSchema.statics.findByEmail = function(email) {
       return user;
     })
     .catch(e => {
-      return Promise.reject(e);
+      throw e;
     });
 };
 
@@ -93,19 +93,6 @@ UserSchema.methods.setStatus = function(status) {
     .catch(e => {
       throw e;
     });
-    // return new Promise((resolve, reject) => {
-    //   user.updateOne({
-    //     $set: {
-    //       status: status
-    //     }
-    //   })
-    //     .then((res) => {
-    //       resolve();
-    //     })
-    //     .catch(e => {
-    //       reject(e);
-    //     })
-    // });
   }
   throw new applicationError.UserNotFoundError();
 };
@@ -183,12 +170,13 @@ UserSchema.methods.clearToken = function(token) {
     return user
   })
   .catch(() => {
-    reject(new applicationError.GeneralError('clearToken() failed'));
+    throw new applicationError.GeneralError('clearToken() failed');
+    // reject(new applicationError.GeneralError('clearToken() failed'));
   });
 };
 
 UserSchema.statics.findUserByToken = function(token) {
-  const user = this;
+  const User = this;
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -220,18 +208,19 @@ UserSchema.pre('save', function (next) {
   if (user.isModified('password')) {
     bcrypt.genSalt(10, (err, salt) => {
       if (err) {
-        return console.log(err);
+        return next(err);
+        // return console.log(err);
       }
       bcrypt.hash(user.password, salt, (err, hash) => {
         if (err) {
-          return console.log(err);
+          return next(err);
         }
         user.password = hash;
-        next();
+        return next();
       });
     });
   } else {
-    next();
+    return next();
   }
 });
 
