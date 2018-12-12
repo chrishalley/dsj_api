@@ -55,6 +55,18 @@ class TokenExpired extends ApplicationError {
   }
 }
 
+class InvalidEventDates extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'Invalid event dates', status || 400);
+  }
+}
+
+class EventDateTimeClash extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'An event has already been booked for that time', status || 400);
+  }
+}
+
 module.exports = UserNotFoundError;
 
 module.exports = {
@@ -65,5 +77,7 @@ module.exports = {
   InvalidRequest,
   GeneralError,
   UserForbidden,
-  TokenExpired
+  TokenExpired,
+  InvalidEventDates,
+  EventDateTimeClash
 };

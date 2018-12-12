@@ -26,47 +26,18 @@ app.use(cors(corsOptions));
 
 const usersRoutes = require('./api/routes/users');
 const authRoutes = require('./api/routes/auth');
+const eventRoutes = require('./api/routes/events');
 
 app.use(morgan('dev'));
 app.use('/users', usersRoutes);
 app.use('/auth', authRoutes);
+app.use('/events', eventRoutes);
 
 const port = process.env.PORT;
-
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
-
-app.get('/events', (req, res) => {
-  res.status(200).send({
-    message: "A ok!"
-  });
-});
-
-app.post('/events', (req, res) => {
-  res.status(200).send(req.body);
-});
-
-
-// Register User
-// app.post('/users/register', (req, res) => {
-//   var user = new User({
-//     email: req.body.email,
-//     firstName: req.body.firstName,
-//     lastName: req.body.lastName,
-//     status: 'pending'
-//   });
-//   user.save()
-//     .then(doc => {
-//       res.status(200).send(doc);
-//     })
-//     .catch(e => {
-//       console.log(e);
-//       const message = errorMessage(e);
-//       res.status(400).send(e);
-//     })
-// });
 
 app.use((req, res, next) => {
   const error = new Error('Not found');

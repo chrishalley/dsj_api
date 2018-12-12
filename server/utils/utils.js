@@ -1,3 +1,5 @@
+const applicationError = require('../errors/applicationErrors');
+
 const isEmptyObject = function(obj) {
   for (key in obj) {
     return false;
