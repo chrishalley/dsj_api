@@ -153,4 +153,23 @@ describe.only('POST /events', () => {
       })
       .end(done);
   })
+  
+  it('should not allow an event to start after another event begins and end before that event ends', (done) => {
+    const event = new Event({ // Should clash with Event One
+      title: 'Clash Event',
+      description: 'Start time +1.25hr / end time +1.75hr',
+      startDateTime: new Date().getTime() + (1.25 * 3600 * 1000),
+      endDateTime: new Date().getTime() + (1.75 * 3600 * 1000),
+    });
+
+    request(app)
+      .post('/events')
+      .send(event)
+      .expect(400)
+      .expect(res => {
+        expect(res.error).toBeTruthy();
+        expect(res.body.events.length).toBeGreaterThan(0);
+      })
+      .end(done);
+  })
 });
