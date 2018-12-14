@@ -4,40 +4,44 @@ const bcrypt = require('bcryptjs');
 
 let {app} = require('./../server');
 const User = require('./../models/user');
-const {populateUsers, users} = require('./seed/seed');
+const {populateUsers, users, getTokens} = require('./seed/seed');
 const applicationError = require('../errors/applicationErrors');
+let tokens;
 
-let superAdminToken;
-let adminToken;
 
 before(populateUsers);
-before(done => {
-  User.find({role: 'super-admin'})
-    .then(users => {
-      // console.log(users[0].tokens[0].token);
-      superAdminToken = users[0].tokens[0].token;
-      done();
-    })
-    .catch(e => {
-      console.log(e);
-    });
+before(async () => {
+  tokens = await getTokens();
 });
-before(done => {
-  User.find({role: 'admin'})
-    .then(users => {
-      // console.log(users[0].tokens[0].token);
-      adminToken = users[0].tokens[0].token;
-      done();
-    })
-    .catch(e => {
-      console.log(e);
-    });
-});
+// before(done => {
+//   User.find({role: 'super-admin'})
+//     .then(users => {
+//       console.log(users);
+//       tokens.tokens.tokens.tokens.tokens.superAdminToken = users[0].tokens[0].token;
+//       console.log(tokens.tokens.tokens.tokens.tokens.superAdminToken);
+//       done();
+//     })
+//     .catch(e => {
+//       console.log(e);
+//     });
+// });
+// before(done => {
+//   User.find({role: 'admin'})
+//     .then(users => {
+//       // console.log(users[0].tokens[0].token);
+//       tokens.adminToken = users[0].tokens[0].token;
+//       done();
+//     })
+//     .catch(e => {
+//       console.log(e);
+//     });
+// });
 
 
 describe('POST /users', () => {
-
+  
   it('should allow a super-admin to add a user with default role of "admin"', function(done) {
+    console.log('TOKENS: ', tokens);
     this.timeout(8000);
 
     const user = {
@@ -49,7 +53,7 @@ describe('POST /users', () => {
     request(app)
       .post('/users')
       .send(user)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(201)
       .expect((res) => {
         expect(res.body).toMatchObject(user);
@@ -69,7 +73,7 @@ describe('POST /users', () => {
     request(app)
       .post('/users')
       .send(user)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(500)
       .expect(res => {
         expect(res.body.code).toBe(11000)
@@ -88,7 +92,7 @@ describe('POST /users', () => {
     request(app)
       .post('/users')
       .send(user)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(201)
       .expect(res => {
         expect(res.body).toMatchObject(user)
@@ -113,12 +117,12 @@ describe('POST /users', () => {
     userOne = request(app)
       .post('/users')
       .send(userOne)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
     
     userTwo = request(app)
       .post('/users')
       .send(userTwo)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
 
     Promise.all([userOne, userTwo])
       .then(res => {
@@ -158,8 +162,8 @@ describe('POST /users', () => {
     request(app)
         .post('/users')
         .send(user)
-        .set('Authorization', 'Bearer ' + adminToken)
-        .expect(401)
+        .set('Authorization', 'Bearer ' + tokens.adminToken)
+        .expect(403)
         .end(done);
   });
 });
@@ -181,7 +185,7 @@ describe('GET /users/:id', () => {
 
     request(app)
       .get(`/users/${user._id}`)
-      .set('Authorization', 'Bearer ' + adminToken)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
       .expect(200)
       .expect(res => {
         expect(res.body.email).toEqual(user.email);
@@ -194,7 +198,7 @@ describe('GET /users/:id', () => {
 
     request(app)
       .get(`/users/${user._id}`)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(200)
       .expect(res => {
         expect(res.body.email).toEqual(user.email);
@@ -209,7 +213,7 @@ describe('GET /users/:id', () => {
 
     request(app)
       .get(`/users/${userID}`)
-      .set('Authorization', 'Bearer ' + adminToken)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
       .expect(404)
       .expect(res => {
         expect(res.body.message).toBe(error.message);
@@ -221,11 +225,11 @@ describe('GET /users/:id', () => {
     var user = users[0];
     let userID = user._id + 'a';
 
-    const error = new applicationError.InvalidUserID();
+    const error = new applicationError.InvalidObjectID();
 
     request(app)
       .get(`/users/${userID}`)
-      .set('Authorization', 'Bearer ' + adminToken)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
       .expect(400)
       .expect(res => {
         expect(res.body.message).toBe(error.message);
@@ -246,13 +250,13 @@ describe('DELETE /users/:id', () => {
       .end(done);
   })
   
-  it('should return a 401 for an admin user', (done) => {
+  it('should return a 403 for an admin user', (done) => {
     const user =  users[0];
     
     request(app)
       .delete(`/users/${user._id}`)
-      .set('Authorization', 'Bearer ' + adminToken)
-      .expect(401)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
+      .expect(403)
       .end(done);
   })
 
@@ -261,7 +265,7 @@ describe('DELETE /users/:id', () => {
     
     request(app)
       .delete(`/users/${user._id}`)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(200)
       .expect((res) => {
         expect(res.body._id.toString()).toEqual(user._id.toString());
@@ -269,7 +273,7 @@ describe('DELETE /users/:id', () => {
       .end(() => {
         request(app)
         .get('/users')
-        .set('Authorization', 'Bearer ' + adminToken)
+        .set('Authorization', 'Bearer ' + tokens.adminToken)
         .expect(200)
         .expect(users => {
           expect(users).not.toContain(user);
@@ -285,7 +289,7 @@ describe('DELETE /users/:id', () => {
     
     request(app)
       .delete(`/users/${userID}`)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(error.status)
       .expect(res => {
         expect(res.body.message).toEqual(error.message);
@@ -296,11 +300,11 @@ describe('DELETE /users/:id', () => {
   it('should throw 400 for invalid id', (done) => {
     const user =  users[0];
     let userID = user._id + 'a';
-    const error = new applicationError.InvalidUserID();
+    const error = new applicationError.InvalidObjectID();
     
     request(app)
       .delete(`/users/${userID}`)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(error.status)
       .expect((res) => {
         expect(res.body.message).toEqual(error.message);
@@ -313,7 +317,7 @@ describe('DELETE /users/:id', () => {
 
     request(app)
       .delete(`/users/${user._id}`)
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(409)
       .end(() => {
         User.find({role: 'super-admin'})
@@ -342,7 +346,7 @@ describe('DELETE /users/:id', () => {
       .then(() => {
         request(app)
         .delete(`/users/${superOne._id}`)
-        .set('Authorization', 'Bearer ' + superAdminToken)
+        .set('Authorization', 'Bearer ' + tokens.superAdminToken)
         .expect(200)
         .end(() => {
           User.find({role: 'super-admin'})
@@ -385,7 +389,7 @@ describe('PATCH /users/:id', () => {
     request(app)
       .patch(url)
       .send({})
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(400)
       .expect(res => {
         expect(res.body.message).toEqual(error.message);
@@ -432,7 +436,7 @@ describe('PATCH /users/:id', () => {
       .send({
         email: 'test@test.com'
       })
-      .set('Authorization', 'Bearer ' + superAdminToken)
+      .set('Authorization', 'Bearer ' + tokens.superAdminToken)
       .expect(200)
       .end(done);
   });
@@ -478,7 +482,7 @@ describe('GET /users', () => {
   it('should return a 200 and array of users', done => {
     request(app)
       .get('/users')
-      .set('Authorization', 'Bearer ' + adminToken)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
       .expect(200)
       .expect(res => {
         expect(res.body.length).toBeGreaterThan(0);
@@ -686,7 +690,7 @@ describe('POST /users/:id/set-password', () => {
     var user = users[2];
     var url = '/users/' + user._id + 'j/set-password';
 
-    const err = new applicationError.InvalidUserID();
+    const err = new applicationError.InvalidObjectID();
 
     User.findById(user._id)
       .then(user => {

@@ -75,7 +75,7 @@ UserSchema.statics.findUserById = function(id) {
       return user;
     })
     .catch(e => {
-      throw new applicationError.InvalidUserID();
+      throw new applicationError.InvalidObjectID();
     });
 };
 
@@ -177,21 +177,43 @@ UserSchema.methods.clearToken = function(token) {
 
 UserSchema.statics.findUserByToken = function(token) {
   const User = this;
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch(e) {
-    return Promise.reject();
+  const regex = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/;
+  if (!regex.test(token)) {
+    throw new applicationError.TokenInvalid();
   }
-  if (decoded.id) {
-    return User.findById(decoded.id)
+  return new Promise((resolve, reject) => {
+    let decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      reject('no fuckin token');
+    } else if (!decoded.id) {
+      reject('no fuckin id in token');
+    } else {
+      return User.findById(decoded.id)
       .then(user => {
-        return user;
+        resolve(user);
       })
       .catch(e => {
-        throw new applicationError.UserNotFoundError();
+        const error = new applicationError.UserNotFoundError();
+        reject(error);
       });
-  }
+    }
+  })
+  // const User = this;
+  // let decoded;
+  // try {
+  //   decoded = jwt.verify(token, process.env.JWT_SECRET);
+  // } catch(e) {
+  //   return Promise.reject();
+  // }
+  // if (decoded.id) {
+  //   return User.findById(decoded.id)
+  //     .then(user => {
+  //       return user;
+  //     })
+  //     .catch(e => {
+  //       throw new applicationError.UserNotFoundError();
+  //     });
+  // }
 };
 
 UserSchema.methods.genPassResetToken = function() {

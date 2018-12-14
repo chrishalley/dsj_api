@@ -2,6 +2,8 @@ const {ObjectID} = require('mongodb');
 const User = require('./../../models/user');
 const Event = require('./../../models/event');
 
+let superAdminToken = null;
+let adminToken = null;
 
 const users = [
   {
@@ -50,8 +52,33 @@ const populateUsers = (done) => {
     });
 }
 
+const getTokens = () => {
+  const superAdminToken = User.find({role: 'super-admin'})
+        .then(users => {
+          return users[0].tokens[0].token;
+        })
+        .catch(e => {
+        });
+
+  const adminToken = User.find({role: 'admin'})
+  .then(users => {
+    return users[0].tokens[0].token;
+  })
+  .catch(e => {
+  });
+
+  return Promise.all([superAdminToken, adminToken])
+    .then(res => {
+      return {
+        superAdminToken: res[0],
+        adminToken: res[1]
+      }
+    })
+}
+
 const events = [
   {
+    _id: new ObjectID(),
     title: 'Event One',
     description: 'Start time +1hr / end time +2hr',
     startDateTime: new Date().getTime() + (3600 * 1000),
@@ -91,5 +118,7 @@ const populateEvents = (done) => {
 module.exports = {
   populateUsers,
   users,
-  populateEvents
+  getTokens,
+  populateEvents,
+  events
 }

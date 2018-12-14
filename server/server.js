@@ -54,8 +54,7 @@ app.use((error, req, res, next) => {
     err.code = error.code;
     res.status(err.status).send(err);
   } else {
-    const customError = new applicationError.GeneralError();
-    res.status(error.status).send(error);
+    res.status(err.status).send(err);
   }
 });
 

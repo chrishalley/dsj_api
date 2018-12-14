@@ -25,9 +25,9 @@ class PasswordIncorrectError extends ApplicationError {
   }
 }
 
-class InvalidUserID extends ApplicationError {
+class InvalidObjectID extends ApplicationError {
   constructor(message, status) {
-    super(message || 'Invalid user ID', status || 400);
+    super(message || 'Invalid Object ID', status || 400);
   }
 }
 
@@ -49,9 +49,21 @@ class UserForbidden extends ApplicationError {
   }
 }
 
+class UserUnauthenticated extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'User unauthenticated', status || 401);
+  }
+}
+
 class TokenExpired extends ApplicationError {
   constructor(message, status) {
     super(message || 'Token has expired', status || 403);
+  }
+}
+
+class TokenInvalid extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'Token is invalid', status || 400);
   }
 }
 
@@ -67,17 +79,26 @@ class EventDateTimeClash extends ApplicationError {
   }
 }
 
+class EventNotFound extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'No event found', status || 404);
+  }
+}
+
 module.exports = UserNotFoundError;
 
 module.exports = {
   ApplicationError,
   UserNotFoundError,
   PasswordIncorrectError,
-  InvalidUserID,
+  InvalidObjectID,
   InvalidRequest,
   GeneralError,
   UserForbidden,
+  UserUnauthenticated,
   TokenExpired,
+  TokenInvalid,
   InvalidEventDates,
-  EventDateTimeClash
+  EventDateTimeClash,
+  EventNotFound
 };

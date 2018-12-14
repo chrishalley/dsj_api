@@ -72,7 +72,7 @@ exports.users_get_single_user = (req, res, next) => {
   const validID = mongoose.Types.ObjectId.isValid(req.params.id);
   
   if (!validID) {
-    const error = new applicationError.InvalidUserID();
+    const error = new applicationError.InvalidObjectID();
     return next(error);
   }
 
@@ -92,7 +92,7 @@ exports.users_delete_user = (req, res, next) => {
   const id = req.params.id;
   
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    const error = new applicationError.InvalidUserID();
+    const error = new applicationError.InvalidObjectID();
     return next(error);
   }
 
@@ -251,7 +251,7 @@ exports.users_verify_reset_token = (req, res, next) => {
   const validID = mongoose.Types.ObjectId.isValid(id);
   
   if (!validID) {
-    const error = new applicationError.InvalidUserID();
+    const error = new applicationError.InvalidObjectID();
     return next(error);
   }
 
@@ -280,7 +280,7 @@ exports.users_reset_password_by_id = (req, res, next) => {
   const id = req.params.id;
 
   if (mongoose.Types.ObjectId.isValid(id) !== true) {
-    const error = new applicationError.InvalidUserID();
+    const error = new applicationError.InvalidObjectID();
     return next(error);
   } 
 

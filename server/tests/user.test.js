@@ -1,11 +1,17 @@
 const expect = require('expect');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
+const ApplicationError = require('../errors/applicationErrors');
 
 const User = require('./../models/user');
-const {populateUsers, users} = require('./seed/seed');
+const {populateUsers, users, getTokens} = require('./seed/seed');
+
+let tokens;
 
 beforeEach(populateUsers);
+before(async () => {
+  tokens = await getTokens();
+});
 
 describe('user.generateAuthToken', () => {
 
@@ -136,9 +142,44 @@ describe('User.findUserByToken', () => {
         })
       })
       .catch(e => {
-        console.log(e)
         done(e);
       });
+  })
+
+  it('should return an error for an invalid token', (done) => {
+    const error = new ApplicationError.TokenInvalid();
+
+    const userOne = User.findById(users[0]._id)
+
+    userOne.then((user) => {
+      User.findUserByToken('abcdefg')
+        .then(res => {
+          done();
+        })
+        .catch(e => {
+          throw e;
+        })
+    })
+    .catch(e => {
+      expect(e.status).toEqual(error.status);
+      expect(e.name).toEqual(error.name);
+      done();
+    })
+      // .then((user) => {
+      //   console.log('USER: ', user);
+      //   const token = user.tokens[0].token;
+      //   console.log()
+      // })
+      // // .then(payload => {
+      // //   return User.findUserByToken(payload.token)
+      // //     .then(user => { 
+      // //     expect(user._id).toEqual(users[0]._id);
+      // //     done();
+      // //   })
+      // // })
+      // .catch(e => {
+      //   done(e);
+      // });
   })
 });
 

@@ -1,17 +1,19 @@
 const jwt = require('jsonwebtoken');
+const ApplicationError = require('../errors/applicationErrors');
 
 module.exports = (req, res, next) => {
-  try {
+  const error = new ApplicationError.UserUnauthenticated();
+  if (req.headers.authorization) {
     const token = req.headers.authorization.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
       expiresIn: '1h'
     });
-    req.userData = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({
-      message: 'Auth failed',
-      error: error
-    });
+    if (decoded) {
+      req.userData = decoded;
+      return next();
+    }
+    return next(error);
+  } else {
+    next(error);
   }
 };
