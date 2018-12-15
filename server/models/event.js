@@ -107,6 +107,52 @@ EventSchema.methods.checkAvailability = function () {
   
 }
 
+EventSchema.statics.checkAvailability = function (startDateTime, endDateTime) {
+  const Event = this;
+  return new Promise((resolve, reject) => {
+    Event.find({
+      $or: [
+        {
+          startDateTime: {
+            $gte: startDateTime,
+            $lte: endDateTime
+          }
+        },
+        {
+          endDateTime: {
+            $gte: startDateTime,
+            $lte: endDateTime
+          }
+        },
+        {
+          $and: [
+            {
+              startDateTime: {
+                $lte: startDateTime
+              },
+              endDateTime: {
+                $gte: endDateTime
+              }
+            }
+          ]
+        }
+      ]
+    })
+    .then(events => {
+      if (events.length > 0) {
+        const error = new applicationError.EventDateTimeClash();
+        error.events = events;
+        reject(error);
+      }
+      resolve();
+    })
+    .catch(e => {
+      reject(e);
+    });
+  })
+  
+}
+
 const Event = mongoose.model('Event', EventSchema);
 
 module.exports = Event;

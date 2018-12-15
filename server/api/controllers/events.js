@@ -36,7 +36,7 @@ exports.createEvent = (req, res, next) => {
     res.status(400).send(validDates.error)
   } else {
     // Check event does not clash with any existing events
-    event.checkAvailability()
+    Event.checkAvailability(event.startDateTime, event.endDateTime)
       .then(() => {
         event.save()
           .then(event => {
