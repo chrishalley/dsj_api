@@ -27,11 +27,13 @@ app.use(cors(corsOptions));
 const usersRoutes = require('./api/routes/users');
 const authRoutes = require('./api/routes/auth');
 const eventRoutes = require('./api/routes/events');
+const bookingRoutes = require('./api/routes/bookings');
 
 app.use(morgan('dev'));
 app.use('/users', usersRoutes);
 app.use('/auth', authRoutes);
 app.use('/events', eventRoutes);
+app.use('/bookings', bookingRoutes);
 
 const port = process.env.PORT;
 
@@ -52,6 +54,10 @@ app.use((error, req, res, next) => {
   } else if (error.name === "MongoError") {
     err.message = error.errmsg;
     err.code = error.code;
+    res.status(err.status).send(err);
+  } else if (error.name === "ValidationError") {
+    err = new applicationError.ValidationError();
+    err.message = error.message;
     res.status(err.status).send(err);
   } else {
     res.status(err.status).send(err);

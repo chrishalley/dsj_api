@@ -36,7 +36,7 @@ exports.createEvent = (req, res, next) => {
     res.status(400).send(validDates.error)
   } else {
     // Check event does not clash with any existing events
-    Event.checkAvailability(event.startDateTime, event.endDateTime)
+    Event.checkAvailability(event)
       .then(() => {
         event.save()
           .then(event => {
@@ -67,14 +67,32 @@ exports.deleteEvent = (req, res, next) => {
 }
 
 exports.updateEvent = (req, res, next) => {
-  const id = req.params.id;
-  const updates = req.body;
+  const edits = req.body;
 
-  Event.findByIdAndUpdate(id, {$set: updates}, (err, event) => {
-    if (err) {
-      const error = new ApplicationError.GeneralError();
-      return next(error);
-    }
-    res.status(200).send(event);
-  })
+  Event.findById(req.params.id)
+    .then(event => {
+      if (!event) {
+        return next(new ApplicationError.EventNotFound());
+      }
+      const editedEvent = Object.assign(event, edits);
+      return Event.checkAvailability(editedEvent)
+        .then(editedEvent => {
+          return Event.findByIdAndUpdate(editedEvent._id, {$set: edits }, (err, result) => {
+            if (err) {
+              throw new ApplicationError.GeneralError();
+            } else {
+              return result
+            }
+          });
+        })
+        .then((result) => {
+          res.status(200).send(result);
+        })
+        .catch(e => {
+          throw (e);
+        })
+      })
+      .catch(e => {
+      return next(e);
+    })
 }

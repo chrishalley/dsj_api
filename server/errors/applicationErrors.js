@@ -85,6 +85,18 @@ class EventNotFound extends ApplicationError {
   }
 }
 
+class BookingInvalid extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'Booking invalid', status || 400);
+  }
+}
+
+class ValidationError extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'Validation error', status || 400);
+  }
+}
+
 module.exports = UserNotFoundError;
 
 module.exports = {
@@ -100,5 +112,7 @@ module.exports = {
   TokenInvalid,
   InvalidEventDates,
   EventDateTimeClash,
-  EventNotFound
+  EventNotFound,
+  BookingInvalid,
+  ValidationError
 };

@@ -3,7 +3,6 @@ const request = require('supertest');
 const {app} = require('../server');
 const {populateEvents, events, populateUsers, users, getTokens} = require('./seed/seed');
 const Event = require('../models/event');
-const User = require('../models/user');
 const ApplicationError = require('../errors/applicationErrors');
 
 let tokens;
@@ -259,7 +258,7 @@ describe('PATCH /events/:id', () => {
 
   it('should allow an authenticated user to update events', (done) => {
     const eventOne = events[0];
-    console.log('eventOne: ', eventOne);
+    // console.log('eventOne: ', eventOne);
 
     const update = {
       title: 'something new'
@@ -270,18 +269,13 @@ describe('PATCH /events/:id', () => {
       .set('Authorization', `Bearer ${tokens.adminToken}`)
       .send(update)
       .expect(200)
-      .expect(res => {
-        expect(res.body.name).toEqual(error.name);
-      })
       .end(() => {
         Event.findById(eventOne._id)
           .then(event => {
-            console.log('EVENT: ', event);
             expect(event.title).not.toEqual(eventOne.title);
             done();
           })
           .catch(e => {
-            console.log(e)
             done(e);
           })
       });
@@ -293,7 +287,7 @@ describe('PATCH /events/:id', () => {
     const eventOneId = events[0]._id + 'a';
 
     request(app)
-      .delete(`/events/${eventOneId}`)
+      .patch(`/events/${eventOneId}`)
       .set('Authorization', 'Bearer ' + tokens.adminToken)
       .expect(400)
       .expect(res => {
@@ -308,7 +302,7 @@ describe('PATCH /events/:id', () => {
     const invalidID = events[0]._id.toHexString().split('').reverse().join('');
 
     request(app)
-      .delete(`/events/${invalidID}`)
+      .patch(`/events/${invalidID}`)
       .set('Authorization', 'Bearer ' + tokens.adminToken)
       .expect(404)
       .expect(res => {
@@ -316,6 +310,112 @@ describe('PATCH /events/:id', () => {
       })
       .end(done)
   });
+
+  it('should not allow an event to be edited to identically clash with another event', (done) => {
+    const error = new ApplicationError.EventDateTimeClash();
+    const eventOneId = events[0]._id;
+    const edit = {
+      startDateTime: events[1].startDateTime,
+      endDateTime: events[1].endDateTime
+    }
+
+    request(app)
+      .patch(`/events/${eventOneId}`)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
+      .send(edit)
+      .expect(400)
+      .expect(res => {
+        expect(res.body.events.length).toBeGreaterThan(0);
+        expect(res.body.events).not.toContainEqual({_id: eventOneId});
+        expect(res.body.name).toEqual(error.name);
+      })
+      .end(done)
+  });
+
+  it('should not allow an event to be edited to clash with first portion of another event', (done) => {
+    const error = new ApplicationError.EventDateTimeClash();
+    const eventOneId = events[0]._id;
+    const edit = {
+      startDateTime: events[1].startDateTime - (1800 * 1000),
+      endDateTime: events[1].endDateTime - (1800 * 1000)
+    }
+
+    request(app)
+      .patch(`/events/${eventOneId}`)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
+      .send(edit)
+      .expect(400)
+      .expect(res => {
+        expect(res.body.events.length).toBeGreaterThan(0);
+        expect(res.body.events).not.toContainEqual({_id: eventOneId});
+        expect(res.body.name).toEqual(error.name);
+      })
+      .end(done)
+  });
+
+  it('should not allow an event to be edited to clash with later portion of another event', (done) => {
+    const error = new ApplicationError.EventDateTimeClash();
+    const eventOneId = events[0]._id;
+    const edit = {
+      startDateTime: events[1].startDateTime + (1800 * 1000),
+      endDateTime: events[1].endDateTime + (1800 * 1000)
+    }
+
+    request(app)
+      .patch(`/events/${eventOneId}`)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
+      .send(edit)
+      .expect(400)
+      .expect(res => {
+        expect(res.body.events.length).toBeGreaterThan(0);
+        expect(res.body.events).not.toContainEqual({_id: eventOneId});
+        expect(res.body.name).toEqual(error.name);
+      })
+      .end(done)
+  });
+
+  it('should not allow an event to be edited to clash inside of another event', (done) => {
+    const error = new ApplicationError.EventDateTimeClash();
+    const eventOneId = events[0]._id;
+    const edit = {
+      startDateTime: events[1].startDateTime + (900 * 1000),
+      endDateTime: events[1].endDateTime - (900 * 1000)
+    }
+
+    request(app)
+      .patch(`/events/${eventOneId}`)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
+      .send(edit)
+      .expect(400)
+      .expect(res => {
+        expect(res.body.events.length).toBeGreaterThan(0);
+        expect(res.body.events).not.toContainEqual({_id: eventOneId});
+        expect(res.body.name).toEqual(error.name);
+      })
+      .end(done)
+  });
+
+  it('should not allow an event to be edited to clash outside of another event\'s start and end times', (done) => {
+    const error = new ApplicationError.EventDateTimeClash();
+    const eventOneId = events[0]._id;
+    const edit = {
+      startDateTime: events[1].startDateTime - (900 * 1000),
+      endDateTime: events[1].endDateTime + (900 * 1000)
+    }
+
+    request(app)
+      .patch(`/events/${eventOneId}`)
+      .set('Authorization', 'Bearer ' + tokens.adminToken)
+      .send(edit)
+      .expect(400)
+      .expect(res => {
+        expect(res.body.events.length).toBeGreaterThan(0);
+        expect(res.body.events).not.toContainEqual({_id: eventOneId});
+        expect(res.body.name).toEqual(error.name);
+      })
+      .end(done)
+  });
+
 });
 
 describe('DELETE /events/:id', () => {
