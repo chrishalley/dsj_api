@@ -27,7 +27,15 @@ exports.createBooking = (req, res, next) => {
         return Event.saveEventArray(validatedEvents);
       }
     })
+    .then((savedEvents) => {
+      bookingRequest.events = savedEvents.map(event => {
+        return event._id;
+      });
+      const booking = new Booking(bookingRequest);
+      return booking.save();
+    })
     .then(result => {
+      console.log(result);
       res.status(201).send(result);
     })
     .catch(e => {

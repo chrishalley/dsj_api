@@ -4,6 +4,10 @@ const request = require('supertest');
 const Booking = require('../models/booking');
 const ApplicationError = require('../errors/applicationErrors');
 const {app} = require('../server');
+const {populateBookings} = require('./seed/seed.js');
+
+
+before(populateBookings);
 
 describe.only('POST /bookings', () => {
 
@@ -131,5 +135,43 @@ describe.only('POST /bookings', () => {
       .end(done);
 
   });
+
+  it('should save multiple valid events with non-clashing times', (done) => {
+    const bookingRequest = {
+      client: 'Test Testison',
+      events: [
+        {
+          title: 'Non-Clashing event one',
+          description: 'Start time +15hr / end time +16hr',
+          startDateTime: new Date().getTime() + (15 * 3600 * 1000),
+          endDateTime: new Date().getTime() + (16 * 3600 * 1000),
+          clientContact: this.client
+        },
+        {
+          title: 'Non-Clashing event two',
+          description: 'Start time +17hr / end time +18hr',
+          startDateTime: new Date().getTime() + (17 * 3600 * 1000),
+          endDateTime: new Date().getTime() + (18 * 3600 * 1000),
+          clientContact: this.client
+        },
+        {
+          title: 'Non-Clashing event three',
+          description: 'Start time +19hr / end time +21hr',
+          startDateTime: new Date().getTime() + (19 * 3600 * 1000),
+          endDateTime: new Date().getTime() + (21 * 3600 * 1000),
+          clientContact: this.client
+        }
+      ]
+    };
+
+    request(app)
+      .post('/bookings')
+      .send(bookingRequest)
+      .expect(201)
+      .expect(res => {
+        expect(res.body.events.length).toEqual(bookingRequest.events.length);
+      })
+      .end(done);
+  })
 
 });

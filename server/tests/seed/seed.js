@@ -1,9 +1,7 @@
 const {ObjectID} = require('mongodb');
 const User = require('./../../models/user');
 const Event = require('./../../models/event');
-
-let superAdminToken = null;
-let adminToken = null;
+const Booking = require('./../../models/booking');
 
 const users = [
   {
@@ -115,10 +113,21 @@ const populateEvents = (done) => {
     });
 }
 
+const populateBookings = (done) => {
+  Booking.deleteMany({})
+    .then(() => {
+      done();
+    })
+    .catch(e => {
+      console.log('populateBookings() error: ', e);
+    });
+}
+
 module.exports = {
   populateUsers,
   users,
   getTokens,
   populateEvents,
-  events
+  events,
+  populateBookings
 }
