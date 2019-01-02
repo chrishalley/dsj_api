@@ -28,12 +28,14 @@ const usersRoutes = require('./api/routes/users');
 const authRoutes = require('./api/routes/auth');
 const eventRoutes = require('./api/routes/events');
 const bookingRoutes = require('./api/routes/bookings');
+const staticRoutes = require('./api/routes/statics');
 
 app.use(morgan('dev'));
 app.use('/users', usersRoutes);
 app.use('/auth', authRoutes);
 app.use('/events', eventRoutes);
 app.use('/bookings', bookingRoutes);
+app.use('/statics', staticRoutes);
 
 const port = process.env.PORT;
 

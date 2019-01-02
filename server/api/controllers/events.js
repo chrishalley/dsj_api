@@ -4,13 +4,19 @@ const mongoose = require('mongoose');
 const ApplicationError = require('../../errors/applicationErrors');
 
 exports.getEvents = (req, res, next) => {
-    Event.find({})
-      .then(events => {
-        return res.status(200).send(events);
-      })
-      .catch(e => {
-        return next(e);
-      });
+  let query = {};
+  if (req.query) {
+    query = req.query;
+    console.log(query);
+    console.log()
+  }
+  Event.find(query)
+    .then(events => {
+      return res.status(200).send(events);
+    })
+    .catch(e => {
+      return next(e);
+    });
 };
 
 exports.getSingleEvent = (req, res, next) => {
