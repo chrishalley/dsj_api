@@ -50,6 +50,7 @@ app.use((req, res, next) => {
 })
 
 app.use((error, req, res, next) => {
+  console.log('ERror: ', error);
   let err = new applicationError.GeneralError();
   if (error instanceof applicationError.ApplicationError) {
     res.status(error.status).send(error);
