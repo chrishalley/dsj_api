@@ -138,7 +138,7 @@ UserSchema.methods.generateAuthToken = function() {
     access: access
   };
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: '1h'
+    expiresIn: '5 seconds'
   }).toString();
   user.tokens = user.tokens.filter(cur => {
     return cur.access !== access;
