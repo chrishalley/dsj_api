@@ -13,14 +13,14 @@ before(async () => {
   tokens = await getTokens();
 });
 
-describe('user.generateAuthToken', () => {
+describe('user.generateAuthTokens', () => {
 
   it('should generate a string token containing user._id and auth access', (done) => {
     const user = users[1];
 
     User.findById(user._id)
       .then(user => {
-        return user.generateAuthToken()
+        return user.generateAuthTokens()
           .then(res => {
             return res;
           })
@@ -57,7 +57,7 @@ describe('user.generateAuthToken', () => {
         return User.findById(user._id);
       })
       .then((user) => {
-        return user.generateAuthToken()
+        return user.generateAuthTokens()
           .then(() => {
             return user;
           })

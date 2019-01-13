@@ -41,7 +41,7 @@ const populateUsers = (done) => {
     })
     .then(users => {
       users.forEach(user => {
-        user.generateAuthToken();
+        user.generateAuthTokens();
       })
       done();
     })

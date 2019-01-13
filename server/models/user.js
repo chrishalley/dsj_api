@@ -130,18 +130,25 @@ UserSchema.methods.checkPassword = function(password) {
     });
 };
 
-UserSchema.methods.generateAuthToken = function() {
+UserSchema.methods.generateAuthTokens = function() {
   const user = this;
   const access = this.role;
-  const payload = {
+  const tokenPayload = {
     id: user._id.toHexString(),
     access: access
   };
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+
+  const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
     expiresIn: '5 seconds'
   }).toString();
+
+  const refreshSecret = process.env.REFRESH_SECRET + user.password;
+  const refreshToken = jwt.sign({id: user._id}, refreshSecret, {
+    expiresIn: '1 hour'
+  })
+
   user.tokens = user.tokens.filter(cur => {
-    return cur.access !== access;
+    return cur.access !== access
   });
   user.tokens = user.tokens.concat([{access, token}]);
   return User.updateOne({_id: user._id}, {tokens: user.tokens})

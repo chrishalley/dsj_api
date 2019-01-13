@@ -9,7 +9,7 @@ const {populateBookings} = require('./seed/seed.js');
 
 before(populateBookings);
 
-describe.only('POST /bookings', () => {
+describe('POST /bookings', () => {
 
   it('should not allow a booking to be created with events array length 0', (done) => {
     const bookingRequest = {
