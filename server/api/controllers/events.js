@@ -4,15 +4,12 @@ const mongoose = require('mongoose');
 const ApplicationError = require('../../errors/applicationErrors');
 
 exports.getEvents = (req, res, next) => {
-  let query = {};
-  if (req.query) {
-    query = req.query;
-    console.log(query);
-    console.log()
-  }
-  Event.find(query)
+  Event.find({})
     .then(events => {
-      return res.status(200).send(events);
+      if (events.length > 0) {
+        return res.status(200).send(events);
+      }
+      throw new ApplicationError.EventNotFound()
     })
     .catch(e => {
       return next(e);
