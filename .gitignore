@@ -3,3 +3,4 @@
 /server/config/nodemailer.js
 /server/config/mailgun.config.js
 .DS_Store
+.*.env

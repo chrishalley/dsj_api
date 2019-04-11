@@ -139,12 +139,7 @@ exports.users_edit_user = (req, res, next) => {
     const error = new applicationError.InvalidRequest();
     return next(error);
   } else {
-  User.findUserById(id)
-    .then(user => {
-      return user.updateOne({
-        $set: update
-      })
-    })
+    User.findByIdAndUpdate(id, {...update}, { upsert: true })
     .then(() => {
       return User.findById(id)
     })

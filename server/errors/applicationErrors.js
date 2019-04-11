@@ -25,6 +25,12 @@ class PasswordIncorrectError extends ApplicationError {
   }
 }
 
+class AuthFailedError extends ApplicationError {
+  constructor(message, status) {
+    super(message || 'Username or password incorrect', status || 403);
+  }
+}
+
 class InvalidObjectID extends ApplicationError {
   constructor(message, status) {
     super(message || 'Invalid Object ID', status || 400);
@@ -97,16 +103,18 @@ class ValidationError extends ApplicationError {
   }
 }
 
-module.exports = UserNotFoundError;
+const error = new ApplicationError()
 
 module.exports = {
   ApplicationError,
   UserNotFoundError,
   PasswordIncorrectError,
+  AuthFailedError,
   InvalidObjectID,
   InvalidRequest,
   GeneralError,
   UserForbidden,
+  UserNotFoundError,
   UserUnauthenticated,
   TokenExpired,
   TokenInvalid,

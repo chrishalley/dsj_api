@@ -1,4 +1,6 @@
-require('./config/config.js');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, `.${process.env.NODE_ENV}.env`) });
+// require('./config/config.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -7,12 +9,15 @@ require('./db/mongoose');
 const applicationError = require('./errors/applicationErrors');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '10mb', extended: true}))
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
+
 
 // CORS Options Config
 if (process.env.NODE_ENV !== 'production') {
   var corsOptions = {
-    origin: 'http://localhost:3000',
+    origin: '*',
+    // origin: 'http://localhost:3000',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
   } 
 } else {
@@ -22,6 +27,8 @@ if (process.env.NODE_ENV !== 'production') {
   }
 }
 
+console.log(process.env.NODE_ENV);
+
 app.use(cors(corsOptions));
 
 const usersRoutes = require('./api/routes/users');
@@ -29,6 +36,7 @@ const authRoutes = require('./api/routes/auth');
 const eventRoutes = require('./api/routes/events');
 const bookingRoutes = require('./api/routes/bookings');
 const staticRoutes = require('./api/routes/statics');
+const profileImages = require('./api/routes/profileImages');
 
 app.use(morgan('dev'));
 app.use('/users', usersRoutes);
@@ -36,6 +44,7 @@ app.use('/auth', authRoutes);
 app.use('/events', eventRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/statics', staticRoutes);
+app.use('/profileImages', profileImages);
 
 const port = process.env.PORT;
 
@@ -44,13 +53,14 @@ app.listen(port, () => {
 });
 
 app.use((req, res, next) => {
+  console.log('req', req);
   const error = new Error('Not found');
   error.status = 404;
   next(error);
 })
 
 app.use((error, req, res, next) => {
-  console.log('ERror: ', error);
+  console.error(error);
   let err = new applicationError.GeneralError();
   if (error instanceof applicationError.ApplicationError) {
     res.status(error.status).send(error);

@@ -42,6 +42,14 @@ var UserSchema = new mongoose.Schema({
   },
   tokens: {
     type: Array
+  },
+  avatar: {
+    type: Object,
+    required: true,
+    default: {
+      profileImage: null,
+      color: '#FFFF00'
+    }
   }
 });
 
@@ -139,7 +147,7 @@ UserSchema.methods.generateAuthTokens = function() {
   };
 
   const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-    expiresIn: '5 seconds'
+    expiresIn: '5s'
   }).toString();
 
   const refreshSecret = process.env.REFRESH_SECRET + user.password;
