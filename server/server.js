@@ -1,6 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, `.${process.env.NODE_ENV}.env`) });
-// require('./config/config.js');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -26,8 +26,6 @@ if (process.env.NODE_ENV !== 'production') {
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
   }
 }
-
-console.log(process.env.NODE_ENV);
 
 app.use(cors(corsOptions));
 
