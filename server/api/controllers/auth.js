@@ -7,7 +7,6 @@ exports.authLogin = (req, res, next) => {
 
   tryLogin(email, password, User, process.env.JWT_SECRET, process.env.REFRESH_SECRET)
     .then(result => {
-      console.log('tryLogin resolved')
       const {token, refreshToken, user} = result;
       res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
       res.set('x-token', token);
@@ -15,8 +14,6 @@ exports.authLogin = (req, res, next) => {
       res.status(200).send(user);
     })
     .catch(e => {
-      console.log('tryCatch rejected')
-      console.log('here: ', e)
       next(e);
     })
 }

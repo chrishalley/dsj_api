@@ -153,7 +153,6 @@ exports.users_edit_user = (req, res, next) => {
 };
 
 exports.users_set_password = (req, res, next) => {
-
   const currentPassword = req.body.currentPassword;
   const newPassword = req.body.newPassword;
 
@@ -168,7 +167,7 @@ exports.users_set_password = (req, res, next) => {
           if (valid) {
             return user;
           }
-          throw new applicationError.PasswordIncorrectError();
+          throw new applicationError.AuthFailedError();
         })
         .catch(e => {
           throw e;
@@ -190,6 +189,7 @@ exports.users_set_password = (req, res, next) => {
 
 exports.users_reset_password = (req, res, next) => {
   const email = req.body.email;
+  console.log('@Email:', email);
   
   // Validate email string
   const validEmail = utils.validateEmail(email);

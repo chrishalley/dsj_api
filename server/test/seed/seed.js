@@ -1,7 +1,7 @@
 const {ObjectID} = require('mongodb');
-const User = require('./../../models/user');
-const Event = require('./../../models/event');
-const Booking = require('./../../models/booking');
+const User = require('../../models/user');
+const Event = require('../../models/event');
+const Booking = require('../../models/booking');
 
 const users = [
   {
@@ -30,48 +30,29 @@ const users = [
 
 ];
 
-const populateUsers = (done) => {
-  User.deleteMany({})
+const saveAndLogInUser = user => {
+  return User(user).save()
+    .then(savedUser => {
+      return savedUser.generateAuthTokens();
+    })
+    .catch(e => console.error(e));
+}
+
+const populateUsers = () => {
+  return User.deleteMany({})
     .then(() => {
-      var userOne = new User(users[0]).save();
-      var userTwo = new User(users[1]).save();
-      var userThree = new User(users[2]).save();
+      const userOne = saveAndLogInUser(users[0])
+      const userTwo = saveAndLogInUser(users[1])
+      const userThree = saveAndLogInUser(users[2]);
 
       return Promise.all([userOne, userTwo, userThree]);
     })
     .then(users => {
-      users.forEach(user => {
-        user.generateAuthTokens();
-      })
-      done();
+      return users;
     })
     .catch(e => {
       console.log(e);
     });
-}
-
-const getTokens = () => {
-  const superAdminToken = User.find({role: 'super-admin'})
-        .then(users => {
-          return users[0].tokens[0].token;
-        })
-        .catch(e => {
-        });
-
-  const adminToken = User.find({role: 'admin'})
-  .then(users => {
-    return users[0].tokens[0].token;
-  })
-  .catch(e => {
-  });
-
-  return Promise.all([superAdminToken, adminToken])
-    .then(res => {
-      return {
-        superAdminToken: res[0],
-        adminToken: res[1]
-      }
-    })
 }
 
 const events = [
@@ -96,17 +77,14 @@ const events = [
   }
 ]
 
-const populateEvents = (done) => {
-  Event.deleteMany({})
+const populateEvents = () => {
+  return Event.deleteMany({})
     .then(() => {
       const eventOne = new Event(events[0]).save();
       const eventTwo = new Event(events[1]).save();
       const eventThree = new Event(events[2]).save();
 
       return Promise.all([eventOne, eventTwo, eventThree]);
-    })
-    .then(events => {
-      done();
     })
     .catch(e => {
       console.log(e);
@@ -126,7 +104,6 @@ const populateBookings = (done) => {
 module.exports = {
   populateUsers,
   users,
-  getTokens,
   populateEvents,
   events,
   populateBookings

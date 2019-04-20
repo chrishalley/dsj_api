@@ -145,11 +145,10 @@ UserSchema.methods.generateAuthTokens = function() {
     id: user._id.toHexString(),
     access: access
   };
-
   const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-    expiresIn: '5s'
+    expiresIn: '24hr'
   }).toString();
-
+  // console.log(token);
   const refreshSecret = process.env.REFRESH_SECRET + user.password;
   const refreshToken = jwt.sign({id: user._id}, refreshSecret, {
     expiresIn: '1 hour'
@@ -169,34 +168,24 @@ UserSchema.methods.generateAuthTokens = function() {
 };
 
 UserSchema.methods.clearToken = function(token) {
+  const error = new applicationError.GeneralError('clearToken() failed');
+  if (!token) throw error;
   const user = this;
-  return User.findOneAndUpdate({
-    _id: user.id,
-    tokens: {
-      $elemMatch: {
-        token: token
-      }
-    }
-  },
-  { 
-    $pull: { tokens: { token: token } } 
-  })
-  .then(() => {
-    return user
-  })
-  .catch(() => {
-    throw new applicationError.GeneralError('clearToken() failed');
-    // reject(new applicationError.GeneralError('clearToken() failed'));
-  });
+  return User.findOneAndUpdate(
+    { _id: user.id },
+    { $pull: { tokens: { token: token } } }
+  )
+  .catch(() => {throw error});
 };
 
 UserSchema.statics.findUserByToken = function(token) {
   const User = this;
   const regex = /^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/;
-  if (!regex.test(token)) {
-    throw new applicationError.TokenInvalid();
-  }
   return new Promise((resolve, reject) => {
+    if (!regex.test(token)) {
+      console.log('Failed')
+      throw new applicationError.TokenInvalid();
+    }
     let decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded) {
       reject('no fuckin token');

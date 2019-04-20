@@ -50,14 +50,13 @@ const refreshTokens = async (token, refreshToken, User, secret, secret2) => {
 };
 
 const tryLogin = (email, password, User, secret, secret2) => {
-  console.log('tryLogin()')
   let user
   return new Promise((resolve, reject) => {
     User.findOne({ email })
       .then((result) => {
         if (!result) {
           //user with provided email not found
-          throw new ApplicationError.AuthFailedError
+          throw new ApplicationError.AuthFailedError()
         }
         user = result
         return bcrypt.compare(password, user.password)
@@ -79,35 +78,9 @@ const tryLogin = (email, password, User, secret, secret2) => {
         });
       })
       .catch(e => {
-        console.log('error')
         reject(e)
       })
   })
-
-  
-  // const user = await User.findOne({ email });
-  // if (!user) {
-  //   console.log('no user')
-  //   //user with provided email not found
-  //   throw new Error('invalid login');
-  // }
-
-  // const valid = await bcrypt.compare(password, user.password);
-  // if(!valid) {
-  //   console.log('invalid password')
-  //   //bad password
-  //   throw new Error('invalid password')
-  // };
-
-  // console.log('user exists')
-
-  // const [token, refreshToken] = await createTokens(user, secret, secret2 + user.password);
-
-  // return {
-  //   user,
-  //   token,
-  //   refreshToken
-  // };
 };
 
 module.exports = {
