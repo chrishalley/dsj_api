@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 
 const ApplicationError = require('../../errors/applicationErrors')
 
+// * This is actually used to log users in, NEED to clean up auth routes!!! Not all functions in User model are currently used. It's very confusing!!!
+
 const createTokens = async (user, secret1, secret2) => {
   
   const createToken = jwt.sign({id: user._id, access: user.role}, secret1, {expiresIn: '24hr'});

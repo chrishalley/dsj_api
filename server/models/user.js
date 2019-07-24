@@ -146,7 +146,7 @@ UserSchema.methods.generateAuthTokens = function() {
     access: access
   };
   const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-    expiresIn: '24hr'
+    expiresIn: '5s'
   }).toString();
   // console.log(token);
   const refreshSecret = process.env.REFRESH_SECRET + user.password;

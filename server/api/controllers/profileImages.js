@@ -1,11 +1,16 @@
 const cloudinary = require('../../apis/cloudinary');
 const ProfileImage = require('../../models/profileImage');
+const ApplicationError = require('../../errors/applicationErrors');
 
 exports.addImage = (req, res, next) => {
   let { file, filename } = req.body;
   filename = filename.split('.')[0];
   cloudinary.uploader.upload(file, {tags: 'profile_image', folder: `dsj-events/profile_images`, use_filename: true}, (err, image) => {
-    if (err) console.log('Cloudinary error:', err);
+    if (err) {
+      console.log('Cloudinary error:', err);
+      const error = new ApplicationError.GeneralError('Unable to upload image');
+      return next(error);
+    }
     console.log(image);
     const transformedImage = cloudinary.image(image.public_id, { transformation: [ { width: 70 } ] });
     console.log('new image', transformedImage.src);
