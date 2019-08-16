@@ -20,7 +20,6 @@ exports.createEvent = (req, res, next) => {
             res.status(201).send(event);
           })
           .catch(e => {
-            console.log('Error: ', e);
             throw e;
           });
       })

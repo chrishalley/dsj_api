@@ -28,6 +28,7 @@ exports.users_save_new_user = (req, res, next) => {
       numbers: true,
       strict: true
     });
+  // const password = 'password'
 
   let newUser = new User(user);
   newUser.password = password;

@@ -4,10 +4,9 @@
   "description": "Backend API for DSJ Events App",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server/server.js",
     "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && mocha server/**/*.test.js",
     "test-watch": "nodemon --exec 'npm test'",
-    "start": "node server/server.js"
+    "start": "nodemon server/server.js"
   },
   "repository": {},
   "engines": {
