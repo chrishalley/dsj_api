@@ -136,6 +136,7 @@ exports.users_delete_user = (req, res, next) => {
 exports.users_edit_user = (req, res, next) => {
   const id = req.params.id;
   const update = req.body;
+  console.log({update})
   if (!update || utils.isEmptyObject(update)) {
     const error = new applicationError.InvalidRequest();
     return next(error);
