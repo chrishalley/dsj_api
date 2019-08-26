@@ -21,52 +21,48 @@ exports.users_get_users_list = (req, res, next) => {
 }
 
 exports.users_save_new_user = (req, res, next) => {
-  let user = req.body;
-  
-  const password = generatePassword.generate({
-      length: 16,
-      numbers: true,
-      strict: true
-    });
-  // const password = 'password'
 
-  let newUser = new User(user);
-  newUser.password = password;
-  
+  const password = generatePassword.generate({
+    length: 16,
+    numbers: true,
+    strict: true
+  });
+
+  const user = new User({
+    ...req.body,
+    password
+  });
+
   if (process.env.NODE_ENV !== 'test') {
-    const userProm = newUser.save();
-    const mailProm = userProm.then(user => {
-      const token = user.genPassResetToken();
-      const setPassURL = `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/set-password?token=${token}`
-      
-      const options = {
-        setPassURL,
-        user: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email
-        }
-      };
-      const message = new emails.newUserWelcome(options);
-      
-      return emails.sendMail(message)
-    })
-    return Promise.all([userProm, mailProm])
-      .then(([user, mail]) => {
+    user.save()
+      .then(user => {
+        const token = user.genPassResetToken();
+        const setPassURL = `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/set-password?token=${token}`;
+    
+        const { firstName, lastName, email } = user;
+
+        const options = {
+          setPassURL,
+          user: {
+            firstName,
+            lastName,
+            email
+          }
+        };
+
+        const message = new emails.newUserWelcome(options);
+        return emails.sendMail(message);
+      })
+      .then(() => {
         res.status(201).send(user);
       })
       .catch(e => {
-        return next(e);
+        // TODO: Delete user and return error message if sending welcome mail fails 
+        next(e)
       })
-    } else {
-      newUser.save()
-      .then((user) => {
-        res.status(201).send(user)
-      })
-      .catch(e => {
-        return next(e); 
-      })
-    }
+  } else {
+    console.log('APP IS IN TEST MODE, PLEASE MOCK DB AND MAILGUN RESPONSES')
+  }
 };
 
 exports.users_get_single_user = (req, res, next) => {

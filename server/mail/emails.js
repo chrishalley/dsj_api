@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'production') {
 let fromField = 'The Priory <bookings@dsj.org.uk>'
 
 const sendMail = (message) => {
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const data = {
         from: message.from,
         to: message.to,
