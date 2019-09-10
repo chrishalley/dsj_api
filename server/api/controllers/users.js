@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const generatePassword = require('generate-password');
-const jwt = require('jsonwebtoken');
+
 const User = require('../../models/user');
 const emails = require('../../mail/emails');
 const applicationError = require('../../errors/applicationErrors');
@@ -37,7 +37,7 @@ exports.users_save_new_user = (req, res, next) => {
     user.save()
       .then(user => {
         const token = user.genPassResetToken();
-        const setPassURL = `${process.env.FRONTEND_BASE_URL}/dashboard/users/${user._id}/set-password?token=${token}`;
+        const setPassURL = `${process.env.FRONTEND_BASE_URL}/login?setPassword=true&token=${token}`;
     
         const { firstName, lastName, email } = user;
 
@@ -155,42 +155,6 @@ exports.users_edit_user = (req, res, next) => {
   }
 };
 
-exports.users_set_password = (req, res, next) => {
-
-  const currentPassword = req.body.currentPassword;
-  const newPassword = req.body.newPassword;
-
-  User.findUserById(req.params.id)
-    .then(user => {
-      if (!user) {
-        throw new applicationError.UserNotFoundError();
-      }
-
-      return user.checkPassword(currentPassword)
-        .then((valid) => {
-          if (valid) {
-            return user;
-          }
-          throw new applicationError.PasswordIncorrectError();
-        })
-        .catch(e => {
-          throw e;
-        });
-    })
-    .then(user => {
-      return user.setPassword(newPassword)
-        .then((user) => {
-          res.status(200).send(user);
-        })
-        .catch(e => {
-          throw new applicationError.GeneralError();
-        })
-    })
-    .catch(e => {
-      return next(e);
-    });
-};
-
 exports.users_reset_password = (req, res, next) => {
   const email = req.body.email;
   
@@ -240,38 +204,6 @@ exports.users_reset_password = (req, res, next) => {
         return next(e);
       })
   }
-};
-
-exports.users_verify_reset_token = (req, res, next) => {
-  const id = req.body._id;
-  const token = req.body.token;
-
-  const validID = mongoose.Types.ObjectId.isValid(id);
-  
-  if (!validID) {
-    const error = new applicationError.InvalidUserID();
-    return next(error);
-  }
-
-  return User.findById(id)
-    .then(user => {
-      if (!user) {
-        throw new applicationError.UserNotFoundError();
-      }
-      let decoded
-      try {
-        decoded = jwt.verify(token, user.password + user.dateApplied)
-        if (decoded._id.toString() !== user._id.toString()) {
-          throw new applicationError.TokenExpired();
-        }
-        return res.status(200).send()
-      } catch(e) {
-        throw e;
-      }
-    })
-    .catch(error => {
-      return next(error);
-    }) 
 };
 
 exports.users_reset_password_by_id = (req, res, next) => {

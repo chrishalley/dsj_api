@@ -21,14 +21,8 @@ router.delete('/:id', checkAuth, checkSuperAdmin, UsersController.users_delete_u
 // UPDATING USERS
 router.patch('/:id', checkAuth, isAdminOwner, UsersController.users_edit_user);
 
-// USER SET PASSWORD
-router.post('/:id/set-password', checkAuth, isAdminOwner, UsersController.users_set_password);
-
 // USER RESET-PASSWORD
 router.post('/reset-password', UsersController.users_reset_password);
-
-// Verify password-reset-link
-router.post('/verify-password-reset-token', UsersController.users_verify_reset_token)
 
 // Reset password by user id
 router.post('/:id/resetPassword', checkAuth, isAdminOwner, UsersController.users_reset_password_by_id);
